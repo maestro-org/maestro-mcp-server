@@ -4,26 +4,6 @@ from typing import Any, Dict, Optional
 import httpx
 from mcp.server.fastmcp import FastMCP
 
-'''
-Config
-
-"maestro": {
-  "command": "/Users/jr/.local/bin/uv",
-  "args": [
-    "--directory",
-    "/Users/jr/Desktop/work/maestro/repos/mcp/maestro",
-    "run",
-    "maestro.py"
-  ],
-  "env": {
-    "MAESTRO_API_KEY": "<MAESTRO_API_KEY>"
-  }
-}
-
-Logs
-
-'''
-
 # Init FastMCP server
 mcp = FastMCP('maestro')
 
