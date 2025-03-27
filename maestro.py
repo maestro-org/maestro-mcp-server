@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import os
-from dotenv import load_dotenv
 from typing import Any, Dict, Optional
 import httpx
 from mcp.server.fastmcp import FastMCP
@@ -24,18 +22,10 @@ Config
 
 Logs
 
-tail -n 20 -f ~/Library/Logs/Claude/mcp-maestro.log
 '''
-
-# Load env vars
-load_dotenv()
 
 # Init FastMCP server
 mcp = FastMCP('maestro')
-
-# Constants
-MAESTRO_API_BASE = 'https://xbt-testnet.gomaestro-api.org/v0'
-API_KEY = os.getenv('MAESTRO_API_KEY', '')
 
 async def fetch_api(endpoint: str, params: Optional[Dict] = None) -> Dict:
     '''Make a request to the Maestro RPC API with proper error handling.'''

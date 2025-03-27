@@ -88,5 +88,10 @@ You will need 3 things:
 
 **NOTE:** You will need to approve the request within Claude.
 
+#### Logs
+```bash
+tail -n 20 -f ~/Library/Logs/Claude/mcp-server-maestro-mcp.log
+```
+
 ### Support
 If you are experiencing any trouble with the above, [open an issue](https://github.com/maestro-org/maestro-mcp/issues/new) or reach out on [Discord](https://discord.gg/ES2rDhBJt3).
