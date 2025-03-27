@@ -1,0 +1,11 @@
+[project]
+name = "maestro-mcp"
+version = "0.1.0"
+description = "An MCP server for communicating with the Maestro Bitcoin RPC API"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.6.0",
+]
