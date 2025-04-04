@@ -3,7 +3,7 @@
 import httpx
 from mcp.server.fastmcp import FastMCP
 from typing import Any, Awaitable, Callable, Dict, List, Optional
-from config import API_KEY, MAESTRO_API_BASE
+from config import API_KEY, MAESTRO_BASE_URL
 
 # Init FastMCP server
 mcp = FastMCP('maestro')
@@ -19,7 +19,7 @@ headers = {
 
 async def fetch_api(endpoint: str, params: Optional[Dict] = None) -> Dict:
     '''Make a GET request to the Maestro RPC API with error handling'''
-    url = f'{MAESTRO_API_BASE}/{endpoint}'
+    url = f'{MAESTRO_BASE_URL}/{endpoint}'
 
     async with httpx.AsyncClient() as client:
         try:
@@ -31,7 +31,7 @@ async def fetch_api(endpoint: str, params: Optional[Dict] = None) -> Dict:
 
 async def post_api(endpoint: str, data: Dict) -> Dict:
     '''Make a POST request to the Maestro RPC API with error handling'''
-    url = f'{MAESTRO_API_BASE}/{endpoint}'
+    url = f'{MAESTRO_BASE_URL}/{endpoint}'
 
     async with httpx.AsyncClient() as client:
         try:

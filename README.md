@@ -62,6 +62,7 @@ You will need 3 things:
         "maestro.py"
       ],
       "env": {
+        "MAESTRO_API_BASE": "https://xbt-mainnet.gomaestro-api.org/v0",
         "MAESTRO_API_KEY": "<MAESTRO_API_KEY>"
       }
     }
