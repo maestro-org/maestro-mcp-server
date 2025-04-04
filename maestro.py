@@ -3,21 +3,22 @@
 import httpx
 from mcp.server.fastmcp import FastMCP
 from typing import Any, Awaitable, Callable, Dict, List, Optional
+from config import API_KEY, MAESTRO_API_BASE
 
 # Init FastMCP server
 mcp = FastMCP('maestro')
+
+headers = {
+    'User-Agent': 'maestro-mcp',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'api-key': API_KEY
+}
 
 # Helpers
 
 async def fetch_api(endpoint: str, params: Optional[Dict] = None) -> Dict:
     '''Make a GET request to the Maestro RPC API with error handling'''
-    headers = {
-        'User-Agent': 'maestro-mcp',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'api-key': API_KEY
-    }
-
     url = f'{MAESTRO_API_BASE}/{endpoint}'
 
     async with httpx.AsyncClient() as client:
@@ -30,13 +31,6 @@ async def fetch_api(endpoint: str, params: Optional[Dict] = None) -> Dict:
 
 async def post_api(endpoint: str, data: Dict) -> Dict:
     '''Make a POST request to the Maestro RPC API with error handling'''
-    headers = {
-        'User-Agent': 'maestro-mcp',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'api-key': API_KEY
-    }
-
     url = f'{MAESTRO_API_BASE}/{endpoint}'
 
     async with httpx.AsyncClient() as client:
@@ -62,6 +56,12 @@ async def paginate_api(
             break
 
     return results
+
+### Heartbeat
+
+@mcp.tool()
+async def return_greeting() -> str:
+    return 'hello from maestro-mcp'
 
 ### Node API
 ## General
