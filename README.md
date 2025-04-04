@@ -88,6 +88,10 @@ You will need 3 things:
 
 **NOTE:** You will need to approve the request within Claude.
 
+### Debugging
+#### CLI inspector tool
+- [mcp-cli](https://github.com/wong2/mcp-cli)
+
 #### Logs
 ```bash
 tail -n 20 -f ~/Library/Logs/Claude/mcp-server-maestro-mcp.log
