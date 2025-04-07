@@ -1,7 +1,6 @@
-# maestro-mcp
+# Maestro MCP Server
 
 A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maestro RPC API. This package provides a set of tools for exploring blocks, transactions, addresses, and other aspects of the Bitcoin blockchain.
-
 
 ### Installation
 
@@ -27,7 +26,7 @@ source .venv/bin/activate
 # .venv\Scripts\activate
 
 # Install dependencies
-pip install .
+uv pip install .
 ```
 
 ### Configure Claude (Desktop)
@@ -62,6 +61,7 @@ You will need 3 things:
         "maestro.py"
       ],
       "env": {
+        "MAESTRO_BASE_URL": "https://xbt-mainnet.gomaestro-api.org/v0",
         "MAESTRO_API_KEY": "<MAESTRO_API_KEY>"
       }
     }
@@ -88,10 +88,28 @@ You will need 3 things:
 
 **NOTE:** You will need to approve the request within Claude.
 
+### Debugging
+#### CLI inspector tool
+- [mcp-cli](https://github.com/wong2/mcp-cli)
+
 #### Logs
 ```bash
 tail -n 20 -f ~/Library/Logs/Claude/mcp-server-maestro-mcp.log
 ```
+
+### Supported Endpoints
+- /mempool/addresses/:id/utxos
+- /transactions/:id
+- /rpc/general/info
+- /rpc/block/latest
+- /rpc/transaction/:id
+- /rpc/transaction/submit
+- /assets/runes
+- /assets/runes/:id
+- /addresses/:id/runes
+- /addresses/:id/utxos
+- /addresses/:id/runes/:id
+- /addresses/:id/txs
 
 ### Support
 If you are experiencing any trouble with the above, [open an issue](https://github.com/maestro-org/maestro-mcp/issues/new) or reach out on [Discord](https://discord.gg/ES2rDhBJt3).

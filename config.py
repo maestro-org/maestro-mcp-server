@@ -7,6 +7,5 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Constants
-MAESTRO_API_BASE = 'https://xbt-testnet.gomaestro-api.org/v0'
-API_KEY = os.getenv('MAESTRO_API_KEY', '')
-
+MAESTRO_BASE_URL = os.getenv('MAESTRO_BASE_URL')
+API_KEY = os.getenv('MAESTRO_API_KEY', 'https://xbt-mainnet.gomaestro-api.org/v0')

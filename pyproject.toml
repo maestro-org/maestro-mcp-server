@@ -17,6 +17,10 @@ dependencies = [
     "httpx>=0.28.1",
     "mcp[cli]>=1.6.0",
 ]
+
+[tool.setuptools]
+packages = { find = { where = [""] } }
+
 [project.urls]
 Homepage = "https://gomaestro.org"
 Documentation = "https://docs.gomaestro.org"
