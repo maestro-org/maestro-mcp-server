@@ -1,4 +1,4 @@
-# maestro-mcp
+# Maestro MCP Server
 
 A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maestro RPC API. This package provides a set of tools for exploring blocks, transactions, addresses, and other aspects of the Bitcoin blockchain.
 
