@@ -2,7 +2,6 @@
 
 A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maestro RPC API. This package provides a set of tools for exploring blocks, transactions, addresses, and other aspects of the Bitcoin blockchain.
 
-
 ### Installation
 
 #### Requirements
@@ -97,6 +96,20 @@ You will need 3 things:
 ```bash
 tail -n 20 -f ~/Library/Logs/Claude/mcp-server-maestro-mcp.log
 ```
+
+### Supported Endpoints
+- /mempool/addresses/:id/utxos
+- /transactions/:id
+- /rpc/general/info
+- /rpc/block/latest
+- /rpc/transaction/:id
+- /rpc/transaction/submit
+- /assets/runes
+- /assets/runes/:id
+- /addresses/:id/runes
+- /addresses/:id/utxos
+- /addresses/:id/runes/:id
+- /addresses/:id/txs
 
 ### Support
 If you are experiencing any trouble with the above, [open an issue](https://github.com/maestro-org/maestro-mcp/issues/new) or reach out on [Discord](https://discord.gg/ES2rDhBJt3).
