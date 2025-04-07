@@ -27,7 +27,7 @@ source .venv/bin/activate
 # .venv\Scripts\activate
 
 # Install dependencies
-pip install .
+uv pip install .
 ```
 
 ### Configure Claude (Desktop)
