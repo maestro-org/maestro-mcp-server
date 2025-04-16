@@ -4,6 +4,17 @@
 
 A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maestro API platform. This package provides a set of tools for exploring blocks, transactions, addresses, and other aspects of the Bitcoin blockchain.
 
+## Table of Contents:
+- [Installation](#installation)
+- [Configure](#configure-claude-desktop)
+- [Usage](#usage)
+- [Debugging](#debugging)
+- [Supported Endpoints](#supported-endpoints)
+- [Contributing](#contributing)
+- [Support](#support)
+- [License](#license)
+---
+
 ### Installation
 
 #### Requirements
@@ -115,5 +126,11 @@ tail -n 20 -f ~/Library/Logs/Claude/mcp-server-maestro-mcp.log
 
 All Maestro API specifications can be found in our Postman [workspace](https://www.postman.com/go-maestro/maestro-api/overview).
 
+### Contributing
+Contributions and feature requests are welcome! Please document clearly as needed. Feel free to submit a [pull request](https://github.com/maestro-org/maestro-mcp/compare) or [open an issue](https://github.com/maestro-org/maestro-mcp/issues/new).
+
 ### Support
 If you are experiencing any trouble with the above, [open an issue](https://github.com/maestro-org/maestro-mcp/issues/new) or reach out on [Discord](https://discord.gg/ES2rDhBJt3).
+
+### License
+[Apache 2.0](#license)
