@@ -15,6 +15,10 @@ headers = {
     'api-key': API_KEY
 }
 
+# Fixed number of API results returned
+# Temporary fix for returning too many results and breaking LLM client memory
+MAX_COUNT = 5
+
 # Helpers
 
 async def fetch_api(endpoint: str, params: Optional[Dict] = None) -> Dict:
@@ -67,61 +71,53 @@ async def return_greeting() -> str:
 ## General
 
 @mcp.tool()
-async def fetch_blockchain_info() -> Dict:
-    '''Retrieve blockchain info'''
+async def blockchain_info() -> Dict:
+    '''
+    Retrieve blockchain info
+
+    Endpoint: /rpc/general/info
+    '''
     return await fetch_api('rpc/general/info')
 
 ## Blocks
 @mcp.tool()
-async def fetch_latest_block() -> Dict:
-    '''Retrieve latest block'''
+async def latest_block() -> Dict:
+    '''
+    Retrieve latest block
+
+    Endpoint: /rpc/block/latest
+    '''
     params = {'page': 1, 'count': 100}
     return await fetch_api('rpc/block/latest', params=params)
 
 ## Transactions
 @mcp.tool()
-async def submit_raw_transaction(raw_tx: str) -> Dict:
-    '''Submit a raw Bitcoin transaction'''
+async def send_transaction(raw_tx: str) -> Dict:
+    '''
+    Submit a raw Bitcoin transaction
+
+    Endpoint: /rpc/transaction/submit
+    '''
     data = {'tx': raw_tx}
     return await post_api('rpc/transaction/submit', data)
 
 @mcp.tool()
-async def fetch_transaction_from_rpc(tx_id: str) -> Dict:
-    '''Retrieve raw transaction details from RPC endpoint'''
+async def transaction_info_rpc(tx_id: str) -> Dict:
+    '''
+    Retrieve raw transaction details from RPC endpoint
+
+    Endpoint: /rpc/transaction/:tx_id 
+    '''
     return await fetch_api(f'rpc/transaction/{tx_id}')
 
 ### Indexer API
 ## Addresses
 
 # internal
-async def fetch_rune_balance_for_address(address_id: str, rune_id: str,  cursor: Optional[str] = None) -> Dict:
-    '''Retrieve rune balance for an address'''
-    params = {
-        'count': 100
-    }
-    if cursor:
-        params['cursor'] = cursor
-
-    response = await fetch_api(f'addresses/{address_id}/runes/{rune_id}', params=params)
-    return {
-        'data': response.get('data', []),
-        'next_cursor': response.get('next_cursor')
-    }
-
-@mcp.tool()
-async def fetch_all_rune_balance_for_address(address_id: str, rune_id: str) -> Dict:
-    '''Retrieve rune balance for an address (paginated)'''
-
-    async def fetch_page(cursor: Optional[str]) -> Dict:
-        return await fetch_rune_balance_for_address(address_id, rune_id, cursor)
-
-    return await paginate_api(fetch_page)
-
-# internal
-async def fetch_transactions_for_address(address_id: str, cursor: Optional[str] = None) -> Dict:
+async def fetch_transactions_by_address(address_id: str, cursor: Optional[str] = None) -> Dict:
     '''List of all transactions which consumed or produced a UTxO controlled by the specified address or script pubkey'''
     params = {
-        'count': 100
+        'count': MAX_COUNT
     }
     if cursor:
         params['cursor'] = cursor
@@ -133,19 +129,23 @@ async def fetch_transactions_for_address(address_id: str, cursor: Optional[str] 
     }
 
 @mcp.tool()
-async def fetch_all_transactions_for_address(address_id: str) -> List[Dict]:
-    '''Retrieve all transactions for a Bitcoin address (paginated)'''
+async def transactions_by_address(address_id: str) -> List[Dict]:
+    '''
+    Retrieve all transactions for a Bitcoin address (paginated)
+
+    Endpoint: /addresses/:address_id/txs 
+    '''
 
     async def fetch_page(cursor: Optional[str]) -> Dict:
-        return await fetch_transactions_for_address(address_id, cursor)
+        return await fetch_transactions_by_address(address_id, cursor)
 
     return await paginate_api(fetch_page)
 
 # internal
-async def fetch_runes_for_address(address_id: str, cursor: Optional[str] = None) -> Dict:
+async def fetch_runes_by_address(address_id: str, cursor: Optional[str] = None) -> Dict:
     '''Map of all Runes tokens and corresponding amounts in UTxOs controlled by the specified address or script pubkey'''
     params = {
-        'count': 100
+        'count': MAX_COUNT
     }
     if cursor:
         params['cursor'] = cursor
@@ -157,19 +157,23 @@ async def fetch_runes_for_address(address_id: str, cursor: Optional[str] = None)
     }
 
 @mcp.tool()
-async def fetch_all_runes_for_address(address_id: str) -> Dict:
-    '''Map of all Runes tokens and corresponding amounts in UTxOs controlled by the specified address or script pubkey (paginated)'''
+async def runes_by_address(address_id: str) -> Dict:
+    '''
+    Map of all Runes tokens and corresponding amounts in UTxOs controlled by the specified address or script pubkey (paginated)
+
+    Endpoint: /addresses/:address_id/runes 
+    '''
 
     async def fetch_page(cursor: Optional[str]) -> Dict:
-        return await fetch_runes_for_address(address_id, cursor)
+        return await fetch_runes_by_address(address_id, cursor)
 
     return await paginate_api(fetch_page)
 
 # internal
-async def fetch_utxos_for_address(address_id: str, cursor: Optional[str] = None) -> Dict:
+async def fetch_utxos_by_address(address_id: str, cursor: Optional[str] = None) -> Dict:
     '''List of all UTxOs which reside at the specified address or script pubkey'''
     params = {
-        'count': 100
+        'count': MAX_COUNT
     }
     if cursor:
         params['cursor'] = cursor
@@ -181,29 +185,45 @@ async def fetch_utxos_for_address(address_id: str, cursor: Optional[str] = None)
     }
 
 @mcp.tool()
-async def fetch_all_utxos_for_address(address_id: str) -> List[Dict]:
-    '''List of all UTxOs which reside at the specified address or script pubkey (paginated)'''
+async def utxos_by_address(address_id: str) -> List[Dict]:
+    '''
+    List of all UTxOs which reside at the specified address or script pubkey (paginated)
+
+    Endpoint: /addresses/:address_id/utxos 
+    '''
 
     async def fetch_page(cursor: Optional[str]) -> Dict:
-        return await fetch_utxos_for_address(address_id, cursor)
+        return await fetch_utxos_by_address(address_id, cursor)
 
     return await paginate_api(fetch_page)
 
 ## Assets
 @mcp.tool()
-async def fetch_rune_by_id(rune_id: str) -> Dict:
-    '''Retrieve rune metadata by rune ID'''
+async def runes_info(rune_id: str) -> Dict:
+    '''
+    Retrieve rune metadata by rune ID
+
+    Endpoint: /assets/:rune_id
+    '''
     return await fetch_api(f'assets/runes/{rune_id}')
 
 @mcp.tool()
-async def fetch_all_runes() -> Dict:
-    '''List of ID and names of all deployed Rune assets'''
+async def list_runes() -> Dict:
+    '''
+    List of ID and names of all deployed Rune assets
+
+    Endpoint: /assets/runes 
+    '''
     return await fetch_api('assets/runes')
 
 ## Transactions
 @mcp.tool()
 async def fetch_transaction_details(tx_id: str) -> Dict:
-    '''Retrieve transaction metadata'''
+    '''
+    Retrieve transaction metadata
+
+    Endpoint: /transactions/:tx_id 
+    '''
     return await fetch_api(f'transactions/{tx_id}')
 
 ### Mempool API
@@ -213,7 +233,7 @@ async def fetch_transaction_details(tx_id: str) -> Dict:
 async def fetch_utxos_for_address_mempool(address_id: str, cursor: Optional[str] = None) -> Dict:
     '''List of all UTxOs which reside at the specified address or script pubkey (mempool-aware)'''
     params = {
-        'count': 100
+        'count': MAX_COUNT
     }
     if cursor:
         params['cursor'] = cursor
@@ -225,8 +245,12 @@ async def fetch_utxos_for_address_mempool(address_id: str, cursor: Optional[str]
     }
 
 @mcp.tool()
-async def fetch_all_utxos_for_address_mempool(address_id: str) -> List[Dict]:
-    '''List of all UTxOs which reside at the specified address or script pubkey (mempool-aware, paginated)'''
+async def utxos_by_address_mempool_aware(address_id: str) -> List[Dict]:
+    '''
+    List of all UTxOs which reside at the specified address or script pubkey (mempool-aware, paginated)
+
+    Endpoint: /mempool/addresses/:address_id/utxos 
+    '''
 
     async def fetch_page(cursor: Optional[str]) -> Dict:
         return await fetch_utxos_for_address_mempool(address_id, cursor)
