@@ -121,7 +121,6 @@ tail -n 20 -f ~/Library/Logs/Claude/mcp-server-maestro-mcp.log
 - /assets/runes/:id
 - /addresses/:id/runes
 - /addresses/:id/utxos
-- /addresses/:id/runes/:id
 - /addresses/:id/txs
 
 All Maestro API specifications can be found in our Postman [workspace](https://www.postman.com/go-maestro/maestro-api/overview).
