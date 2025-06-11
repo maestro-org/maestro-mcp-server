@@ -10,7 +10,7 @@ A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maest
 
 #### Requirements
 
-- Node >=20
+- [Node](https://nodejs.org/en) >=20
 
 #### Deploy
 
