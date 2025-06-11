@@ -125,7 +125,7 @@ You will need only one thing:
    ![](https://github.com/user-attachments/assets/053e1589-faf9-4ec9-bab8-2f77b44f2757)
 
 3. Select `maestro-mcp-server`
-   ![](https://github.com/user-attachments/assets/302b2535-8b1c-4cab-b3f6-e244a0ffddcc")
+   ![](https://github.com/user-attachments/assets/302b2535-8b1c-4cab-b3f6-e244a0ffddcc)
 
 4. View available MCP tools
    ![](https://github.com/user-attachments/assets/91503920-6908-463b-b27f-614acf052ac5)
