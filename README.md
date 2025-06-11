@@ -66,8 +66,8 @@ You will need 3 things:
 {
   "mcpServers": {
     "maestro-mcp": {
-      "command": "/ABSOLUTE/PATH/TO/npm",
-      "args": ["start", "--prexix", "/ABSOLUTE/PATH/TO/maestro-mcp"],
+      "command": "/ABSOLUTE/PATH/TO/node",
+      "args": ["/ABSOLUTE/PATH/TO/maestro-mcp-server/src/index.ts"],
       "env": {
         "MAESTRO_BASE_URL": "https://xbt-mainnet.gomaestro-api.org/v0",
         "MAESTRO_API_KEY": "<MAESTRO_API_KEY>"
