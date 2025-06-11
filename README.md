@@ -37,14 +37,14 @@ npm start
 Generated with [openapi-mcp-generator](https://github.com/harsha-iiiv/openapi-mcp-generator):
 
 ```bash
-npx openapi-mcp-generator --input openapi-merged.json --output ./ force
+npx openapi-mcp-generator --input openapi-merged.json --output ./ --force
 ```
 
 ### Configure Claude (Desktop)
 
 Download Claude Desktop [here](https://claude.ai/download).
 
-#### Steps (TODO(Jon): update to follow Node based server)
+#### Steps
 
 1. Open Claude Desktop settings
 
@@ -58,16 +58,16 @@ Download Claude Desktop [here](https://claude.ai/download).
 
 You will need 3 things:
 
-1. Absolute path to `uv`; ie, `which uv`
-2. Absolute path to `mcp-maestro` repo
+1. Absolute path to `npm`; ie, `which npm`
+2. Absolute path to `maestro-mcp-server` repo
 3. Maestro API key
 
 ```json
 {
   "mcpServers": {
     "maestro-mcp": {
-      "command": "/ABSOLUTE/PATH/TO/uv",
-      "args": ["--directory", "/ABSOLUTE/PATH/TO/maestro-mcp", "run", "maestro.py"],
+      "command": "/ABSOLUTE/PATH/TO/npm",
+      "args": ["start", "--prexix", "/ABSOLUTE/PATH/TO/maestro-mcp"],
       "env": {
         "MAESTRO_BASE_URL": "https://xbt-mainnet.gomaestro-api.org/v0",
         "MAESTRO_API_KEY": "<MAESTRO_API_KEY>"
@@ -107,13 +107,14 @@ You will need 3 things:
 #### Logs
 
 ```bash
-tail -n 20 -f ~/Library/Logs/Claude/mcp-server-maestro-mcp.log
+tail -n 20 -f ~/Library/Logs/Claude/maestro-mcp-server.log
 ```
 
 ### Supported APIs
 
 - Blockchain Indexer API
 - Mempool Monitoring API
+- Market Price API
 - Wallet API
 - Node RPC API
 
