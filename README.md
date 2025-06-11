@@ -11,6 +11,7 @@ A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maest
 #### Requirements
 
 - [Node](https://nodejs.org/en) >=20
+- Clone the [maestro-mcp-server repository](https://github.com/maestro-org/maestro-mcp-server.git)
 
 #### Deploy
 
