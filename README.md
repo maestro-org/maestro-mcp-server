@@ -61,7 +61,7 @@ Contact [support](#support) if you experience any issues.
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
-Copy the below contents into this config file, depending on your need.
+Copy the below contents into this config file.
 
 #### Local-scoped MCP
 
@@ -79,33 +79,6 @@ You will need 3 things:
     "maestro-mcp-server": {
       "command": "/ABSOLUTE/PATH/TO/node",
       "args": ["/ABSOLUTE/PATH/TO/maestro-mcp-server/src/index.ts"],
-      "env": {
-        "MAESTRO_BASE_URL": "https://xbt-mainnet.gomaestro-api.org/v0",
-        "MAESTRO_API_KEY": "<MAESTRO_API_KEY>"
-      }
-    }
-  }
-}
-```
-
-#### Hosted MCP
-
-_No cloning of the repo is neeeded; all MCP server code is hosted remotely; simply include the remote URL as shown below and you will be connected to our hosted MCP._
-
-You will need only one thing:
-
-1. Maestro API key
-
-```
-{
-  "mcpServers": {
-    "maestro-mcp-server": {
-      "command": "/ABSOLUTE/PATH/TO/npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://mcp.gomaestro.org/sse"
-      ],
       "env": {
         "MAESTRO_BASE_URL": "https://xbt-mainnet.gomaestro-api.org/v0",
         "MAESTRO_API_KEY": "<MAESTRO_API_KEY>"
