@@ -44,7 +44,7 @@ npx openapi-mcp-generator --input openapi-merged.json --output ./ force
 
 Download Claude Desktop [here](https://claude.ai/download).
 
-#### Steps (TODO(Jon): update to follow Node based server)
+#### Test with Claude Desktop
 
 1. Open Claude Desktop settings
 
@@ -66,7 +66,7 @@ You will need 3 things:
 {
   "mcpServers": {
     "maestro-mcp": {
-      "command": "/ABSOLUTE/PATH/TO/uv",
+      "command": "/ABSOLUTE/PATH/TO/maestro-mcp-server",
       "args": ["--directory", "/ABSOLUTE/PATH/TO/maestro-mcp", "run", "maestro.py"],
       "env": {
         "MAESTRO_BASE_URL": "https://xbt-mainnet.gomaestro-api.org/v0",
