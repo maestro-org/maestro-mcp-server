@@ -6,6 +6,8 @@
 
 A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maestro API platform. This package provides a set of tools for exploring blocks, transactions, addresses, and other aspects of the Bitcoin blockchain.
 
+This runs as [MCP Streamable HTTP server](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http).
+
 ---
 
 ### Installation
@@ -31,7 +33,7 @@ npm run build
 Run:
 
 ```bash
-npm start
+npm run start:http
 ```
 
 ### Server Generation
