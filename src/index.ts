@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * MCP Server generated from OpenAPI spec for bitcoin---blockchain-indexer-api vv0.2.0
- * Generated on: 2025-06-11T18:56:23.444Z
+ * Generated on: 2025-06-12T13:59:10.117Z
  */
 
 // Load environment variables from .env file
@@ -973,6 +973,7 @@ async function executeApiTool(
         headers['content-type'] = definition.requestBodyContentType;
     }
 
+
     // Apply security requirements if available
     // Security requirements use OR between array items and AND within each object
     const appliedSecurity = definition.securityRequirements?.find(req => {
@@ -983,7 +984,7 @@ async function executeApiTool(
             
             // API Key security (header, query, cookie)
             if (scheme.type === 'apiKey') {
-                return !!process.env[`MAESTRO_API_KEY`];
+                return !!process.env[`API_KEY_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
             }
             
             // HTTP security (basic, bearer)
@@ -1033,7 +1034,7 @@ async function executeApiTool(
             
             // API Key security
             if (scheme?.type === 'apiKey') {
-                const apiKey = process.env[`MAESTRO_API_KEY`];
+                const apiKey = process.env[`API_KEY_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
                 if (apiKey) {
                     if (scheme.in === 'header') {
                         headers[scheme.name.toLowerCase()] = apiKey;
