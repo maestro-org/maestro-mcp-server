@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ['main', 'ci']
+    branches: ['main']
   pull_request:
-    branches: ['main', 'ci']
+    branches: ['main']
 
 jobs:
   build-and-push:
@@ -30,5 +30,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image to Github
-        if: github.ref_name == 'ci'
+        if: github.ref_name == 'main'
         run: make VERSION=$(.github/scripts/version) push
