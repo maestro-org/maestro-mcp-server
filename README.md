@@ -1,3 +1,5 @@
+[![CI](https://github.com/maestro-org/maestro-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/maestro-org/maestro-mcp-server/actions/workflows/ci.yml)
+
 # Maestro MCP Server
 
 <img src="https://github.com/user-attachments/assets/98413b13-42c0-4438-9231-e61cdb946039" width="500"><br />
