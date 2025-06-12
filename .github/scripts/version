@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -e
+
+TZ=UTC
+
+# Verify clean tree:
+if [ -n "$(git status --porcelain -- ':!*gha-creds-*.json' ':!root-config')" ]; then
+    echo "Error: Working directory is not clean:" >&2
+    echo "$(git status --porcelain -- ':!*gha-creds-*.json' ':!root-config')" >&2
+    exit 1
+fi
+
+# Fetch the latest main branch from the remote repository:
+git fetch
+
+# Check if the current HEAD is a commit on the main branch:
+if ! git merge-base --is-ancestor HEAD main; then
+    echo "Error: Current commit is not a valid commit from 'main' branch." >&2
+    exit 1
+fi
+
+# Prints version in the following format: <DAY>.<COMMIT#>_<SHA>
+# From docker docs: A tag name may contain lowercase and uppercase characters, digits,
+# underscores, periods and dashes. A tag name may not start with a period or a dash
+# and may contain a maximum of 128 characters.
+git log --pretty="format:%cd %h" --date="format-local:%Y%m%d" | \
+    awk 'NR==1{d=$1;h=$2}{if(d==$1)c++;else exit}END{print d"."c"_"h}'
