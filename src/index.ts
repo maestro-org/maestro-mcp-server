@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * MCP Server generated from OpenAPI spec for bitcoin---blockchain-indexer-api vv0.2.0
- * Generated on: 2025-06-11T18:56:23.444Z
+ * Generated on: 2025-06-13T18:27:43.448Z
  */
 
 // Load environment variables from .env file
@@ -17,6 +17,7 @@ import {
   type CallToolResult,
   type CallToolRequest
 } from "@modelcontextprotocol/sdk/types.js";
+import { setupStreamableHttpServer } from "./streamable-http.js";
 
 import { z, ZodError } from 'zod';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
@@ -78,6 +79,16 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
     method: "get",
     pathTemplate: "/addresses/{address}/balance",
     executionParameters: [{"name":"address","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["historical_satoshi_balance_by_address", {
+    name: "historical_satoshi_balance_by_address",
+    description: `Returns the historical satoshi balances, itemized by block and including USD price.`,
+    inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"},"order":{"allOf":[{"type":"string","default":"asc","enum":["asc","desc"]}],"type":"null","description":"The order in which the results are sorted. Supported values: asc, desc"},"count":{"allOf":[{"type":"integer","default":100,"minimum":0}],"type":"null","description":"The max number of results per page"},"from":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only blocks included on or after a specific height or timestamps. If this parameter is not provided, the starting point will be the first block where the address has seen its balance increase or decrease."},"to":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only blocks included on or before a specific height or timestamp"},"cursor":{"type":["string","null"],"description":"Pagination cursor string, use the cursor included in a page of results to fetch the next page"},"height_params":{"type":["boolean","null"],"description":"Whether the from and to integer query params should be read as timestamps or as block heights. True (the default) means from and to params should be read as block heights."}},"required":["address"]},
+    method: "get",
+    pathTemplate: "/addresses/{address}/balance/historical",
+    executionParameters: [{"name":"address","in":"path"},{"name":"order","in":"query"},{"name":"count","in":"query"},{"name":"from","in":"query"},{"name":"to","in":"query"},{"name":"cursor","in":"query"},{"name":"height_params","in":"query"}],
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
@@ -161,6 +172,16 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
+  ["address_statistics", {
+    name: "address_statistics",
+    description: `Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, and current satoshi, rune and inscription balance.`,
+    inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"}},"required":["address"]},
+    method: "get",
+    pathTemplate: "/addresses/{address}/statistics",
+    executionParameters: [{"name":"address","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
   ["txs_by_address", {
     name: "txs_by_address",
     description: `List of all transactions which consumed or produced a UTxO controlled by the specified address or script pubkey.`,
@@ -227,6 +248,16 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
     inputSchema: {"type":"object","properties":{"collection_symbol":{"type":"string","description":"Collection symbol (UTF-8)"}},"required":["collection_symbol"]},
     method: "get",
     pathTemplate: "/assets/collections/{collection_symbol}/metadata",
+    executionParameters: [{"name":"collection_symbol","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["collection_stats_by_collection_symbol", {
+    name: "collection_stats_by_collection_symbol",
+    description: `Provides stats for a given inscription: total volume (in sats), floor price (in sats), and total listed. This is useful for rendering collection summaries or for display in marketplaces and aggregators.`,
+    inputSchema: {"type":"object","properties":{"collection_symbol":{"type":"string","description":"Collection symbol (UTF-8)"}},"required":["collection_symbol"]},
+    method: "get",
+    pathTemplate: "/assets/collections/{collection_symbol}/stats",
     executionParameters: [{"name":"collection_symbol","in":"path"}],
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
@@ -524,8 +555,8 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcblocklatest", {
-    name: "getrpcblocklatest",
+  ["rpc_latest_block", {
+    name: "rpc_latest_block",
     description: `Returns the most recent block on the Bitcoin blockchain.
 Useful for syncing frontends, indexing latest chain state, or watching for new block activity. Set \`verbose=true\` for full TX data without need for separate calls.`,
     inputSchema: {"type":"object","properties":{"page":{"default":1,"type":"number","description":"Page number for block transactions."},"count":{"default":100,"type":"number","description":"Max number of block transactions per page."},"verbose":{"default":false,"type":"boolean","description":"Verbose."}}},
@@ -535,8 +566,8 @@ Useful for syncing frontends, indexing latest chain state, or watching for new b
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcblockrangebyendheight", {
-    name: "getrpcblockrangebyendheight",
+  ["rpc_block_range_info", {
+    name: "rpc_block_range_info",
     description: `Fetches basic info for a contiguous block range (start and end height).`,
     inputSchema: {"type":"object","properties":{"start_height":{"type":"string","description":"Start height."},"end_height":{"type":"string","description":"End height."},"page":{"default":1,"type":"number","description":"Page number."},"count":{"default":10,"type":"number","description":"Number of blocks."},"order":{"default":"asc","type":"string","description":"Order blocks by descending (desc) or ascending (asc)."}},"required":["start_height","end_height"]},
     method: "get",
@@ -545,8 +576,8 @@ Useful for syncing frontends, indexing latest chain state, or watching for new b
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcblockrecent", {
-    name: "getrpcblockrecent",
+  ["rpc_recent_blocks_info", {
+    name: "rpc_recent_blocks_info",
     description: `Returns the most recent blocks from the tip going backward. Useful to view or stream recent blockchain activity.`,
     inputSchema: {"type":"object","properties":{"page":{"default":1,"type":"number","description":"Page number."},"count":{"default":10,"type":"number","description":"Number of blocks."},"order":{"default":"asc","type":"string","description":"Order blocks by descending (desc) or ascending (asc)."}}},
     method: "get",
@@ -555,8 +586,8 @@ Useful for syncing frontends, indexing latest chain state, or watching for new b
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcblockrecentbycount", {
-    name: "getrpcblockrecentbycount",
+  ["rpc_recent_blocks_info_count", {
+    name: "rpc_recent_blocks_info_count",
     description: `Returns a list of the most recently mined blocks, limited by count. It provides a snapshot of the latest blockchain activity, starting from the current chain tip and going backward.`,
     inputSchema: {"type":"object","properties":{"count":{"default":1,"maximum":10,"minimum":1,"type":"number","description":"Number of blocks."},"order":{"default":"asc","type":"string","description":"Order blocks by descending (desc) or ascending (asc)."}},"required":["count"]},
     method: "get",
@@ -565,8 +596,8 @@ Useful for syncing frontends, indexing latest chain state, or watching for new b
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcblockbyheightorhash", {
-    name: "getrpcblockbyheightorhash",
+  ["rpc_block_info", {
+    name: "rpc_block_info",
     description: `Retrieve full or summary information for a specific block.
 Useful for analyzing individual blocks or resolving TX data inline.`,
     inputSchema: {"type":"object","properties":{"height_or_hash":{"type":"string","description":"Block height or hash."},"page":{"default":1,"type":"number","description":"Page number for block transactions."},"count":{"default":100,"type":"number","description":"Max number of block transactions per page."},"verbose":{"default":false,"type":"boolean","description":"Verbose."}},"required":["height_or_hash"]},
@@ -576,8 +607,8 @@ Useful for analyzing individual blocks or resolving TX data inline.`,
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcblockminer", {
-    name: "getrpcblockminer",
+  ["rpc_block_miner_info", {
+    name: "rpc_block_miner_info",
     description: `Returns metadata about the miner for a specific block.
 Includes name, known addresses, icon, and associated tags.
 Useful for research or visual analytics on pool distribution.`,
@@ -588,8 +619,8 @@ Useful for research or visual analytics on pool distribution.`,
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcblockvolume", {
-    name: "getrpcblockvolume",
+  ["rpc_block_volume", {
+    name: "rpc_block_volume",
     description: `Returns total transaction output volume (in satoshis) for a block.
 This provides insight into economic activity, not just block size.`,
     inputSchema: {"type":"object","properties":{"height_or_hash":{"type":"string","description":"Block height or hash."}},"required":["height_or_hash"]},
@@ -599,8 +630,8 @@ This provides insight into economic activity, not just block size.`,
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcgeneralinfo", {
-    name: "getrpcgeneralinfo",
+  ["rpc_chain_info", {
+    name: "rpc_chain_info",
     description: `Returns global node and chain info: block count, difficulty, pruning, fork status, etc.
 Useful for diagnostics, UI status panels, or infrastructure monitoring.`,
     inputSchema: {"type":"object","properties":{}},
@@ -610,8 +641,8 @@ Useful for diagnostics, UI status panels, or infrastructure monitoring.`,
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcmempoolinfo", {
-    name: "getrpcmempoolinfo",
+  ["rpc_mempool_info", {
+    name: "rpc_mempool_info",
     description: `Returns size, memory usage, fee thresholds, and Replace-By-Fee (RBF) state.
 Useful for gauging current congestion and planning fees accordingly.`,
     inputSchema: {"type":"object","properties":{}},
@@ -621,8 +652,8 @@ Useful for gauging current congestion and planning fees accordingly.`,
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcmempooltransactions", {
-    name: "getrpcmempooltransactions",
+  ["rpc_mempool_transactions", {
+    name: "rpc_mempool_transactions",
     description: `Returns a list of transaction IDs currently in the mempool.`,
     inputSchema: {"type":"object","properties":{}},
     method: "get",
@@ -631,8 +662,8 @@ Useful for gauging current congestion and planning fees accordingly.`,
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcmempooltransactionsbytxhash", {
-    name: "getrpcmempooltransactionsbytxhash",
+  ["rpc_mempool_transaction_details", {
+    name: "rpc_mempool_transaction_details",
     description: `Returns full information for a mempool transaction: fees, inputs, Replace-By-Fee (RBF) flags, unconfirmed descendants, etc.
 Useful for inspecting transactions or verifying status.`,
     inputSchema: {"type":"object","properties":{"tx_hash":{"type":"string","description":"Transaction hash."}},"required":["tx_hash"]},
@@ -642,8 +673,8 @@ Useful for inspecting transactions or verifying status.`,
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcmempooltransactionsancestors", {
-    name: "getrpcmempooltransactionsancestors",
+  ["rpc_mempool_transaction_ancestors", {
+    name: "rpc_mempool_transaction_ancestors",
     description: `Lists ancestor TXs for a mempool TX, by a TX hash.
 Useful for evaluating chains of unconfirmed transactions and replacability via Replace-By-Fee (RBF).`,
     inputSchema: {"type":"object","properties":{"tx_hash":{"type":"string","description":"Transaction hash."}},"required":["tx_hash"]},
@@ -653,8 +684,8 @@ Useful for evaluating chains of unconfirmed transactions and replacability via R
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpcmempooltransactionsdescendants", {
-    name: "getrpcmempooltransactionsdescendants",
+  ["rpc_mempool_transaction_descendants", {
+    name: "rpc_mempool_transaction_descendants",
     description: `Lists descendant TXs for a mempool TX, by a TX hash.
 Useful for evaluating chains of unconfirmed transactions and replacability via Replace-By-Fee (RBF).`,
     inputSchema: {"type":"object","properties":{"tx_hash":{"type":"string","description":"Transaction hash."}},"required":["tx_hash"]},
@@ -664,8 +695,8 @@ Useful for evaluating chains of unconfirmed transactions and replacability via R
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["postrpctransactionbatch", {
-    name: "postrpctransactionbatch",
+  ["rpc_transaction_info_batch", {
+    name: "rpc_transaction_info_batch",
     description: `Takes up to 50 TX hashes and returns verbose TX data in a single call. Useful for dashboards or syncing nodes without hitting rate limits.`,
     inputSchema: {"type":"object","properties":{"verbose":{"default":false,"type":"boolean","description":"Verbose."},"requestBody":{"properties":{"tx_ids":{"items":{"type":"string"},"maxItems":50,"type":"array","uniqueItems":false}},"required":["tx_ids"],"type":"object","description":"Transaction hash array."}},"required":["requestBody"]},
     method: "post",
@@ -674,8 +705,8 @@ Useful for evaluating chains of unconfirmed transactions and replacability via R
     requestBodyContentType: "application/json",
     securityRequirements: [{"api-key":[]}]
   }],
-  ["postrpctransactiondecode", {
-    name: "postrpctransactiondecode",
+  ["rpc_transaction_decode", {
+    name: "rpc_transaction_decode",
     description: `Takes a raw TX hex and returns structured JSON.
 Useful when building or validating raw transactions.`,
     inputSchema: {"type":"object","properties":{"requestBody":{"type":"string","description":"Raw Transaction Hex."}},"required":["requestBody"]},
@@ -685,8 +716,8 @@ Useful when building or validating raw transactions.`,
     requestBodyContentType: "application/json",
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpctransactionestimatefeebyblocks", {
-    name: "getrpctransactionestimatefeebyblocks",
+  ["rpc_estimate_smart_fee", {
+    name: "rpc_estimate_smart_fee",
     description: `Estimate approximate fee per kilobyte (kB) needed for a transaction.
 Useful for setting dynamic fee rates in wallets or broadcast tools.`,
     inputSchema: {"type":"object","properties":{"blocks":{"default":1,"maximum":1008,"minimum":1,"type":"number","description":"Confirmation target in blocks."},"mode":{"default":"conservative","type":"string","description":"Whether to return a more conservative estimate which also satisfies a longer history. A conservative estimate potentially returns a higher feerate and is more likely to be sufficient for the desired target, but is not as responsive to short term drops in the prevailing fee market. Must be one of: 'unset' 'economical' 'conservative'."}},"required":["blocks"]},
@@ -696,8 +727,8 @@ Useful for setting dynamic fee rates in wallets or broadcast tools.`,
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["postrpctransactionhex", {
-    name: "postrpctransactionhex",
+  ["rpc_transaction_info_hex", {
+    name: "rpc_transaction_info_hex",
     description: `Same as \`/transaction/decode\` in that it takes a raw TX hex and returns structured JSON, but it also fetches blockchain metadata such as confirmations and block height.`,
     inputSchema: {"type":"object","properties":{"verbose":{"default":false,"type":"boolean","description":"Verbose."},"requestBody":{"type":"string","description":"Transaction hex."}},"required":["requestBody"]},
     method: "post",
@@ -706,8 +737,8 @@ Useful for setting dynamic fee rates in wallets or broadcast tools.`,
     requestBodyContentType: "application/json",
     securityRequirements: [{"api-key":[]}]
   }],
-  ["postrpctransactionpsbtdecode", {
-    name: "postrpctransactionpsbtdecode",
+  ["rpc_psbt_decode", {
+    name: "rpc_psbt_decode",
     description: `Takes a signed PSBT hex and returns the internal structure. Covers UTXO metadata, BIP32 deriv paths, inputs/outputs, etc.
 Useful for hardware wallet or multisig integrations.`,
     inputSchema: {"type":"object","properties":{"requestBody":{"type":"string","description":"Signed PSBT Hex."}},"required":["requestBody"]},
@@ -717,8 +748,8 @@ Useful for hardware wallet or multisig integrations.`,
     requestBodyContentType: "application/json",
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpctransactionrecent", {
-    name: "getrpctransactionrecent",
+  ["rpc_transaction_recent", {
+    name: "rpc_transaction_recent",
     description: `Returns a list of recent on-chain transactions.
 Useful for retrieving lastest transactions or monitoring new, on-chain activity by block height.`,
     inputSchema: {"type":"object","properties":{"page":{"default":1,"type":"number","description":"Page number."},"count":{"default":100,"type":"number","description":"Number of blocks."},"order":{"default":"asc","type":"string","description":"Order of transactions."},"verbose":{"default":false,"type":"boolean","description":"Verbose."}}},
@@ -728,8 +759,8 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpctransactionrecentbycount", {
-    name: "getrpctransactionrecentbycount",
+  ["rpc_transaction_recent_count", {
+    name: "rpc_transaction_recent_count",
     description: `Returns a list of recent on-chain transactions, specified by count.
 Useful for retrieving lastest transactions or monitoring new, on-chain activity by block height.`,
     inputSchema: {"type":"object","properties":{"count":{"default":3,"maximum":100,"minimum":1,"type":"number","description":"Number of transactions."},"order":{"default":"asc","type":"string","description":"Order transactions by descending (desc) or ascending (asc)."},"verbose":{"default":false,"type":"boolean","description":"Verbose."}},"required":["count"]},
@@ -739,8 +770,8 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["postrpctransactionsubmit", {
-    name: "postrpctransactionsubmit",
+  ["rpc_submit_transaction", {
+    name: "rpc_submit_transaction",
     description: `Pushes a signed raw transaction to the network.`,
     inputSchema: {"type":"object","properties":{"requestBody":{"type":"string","description":"Signed Tx Hex."}},"required":["requestBody"]},
     method: "post",
@@ -749,8 +780,8 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     requestBodyContentType: "application/json",
     securityRequirements: [{"api-key":[]}]
   }],
-  ["getrpctransactionbytxhash", {
-    name: "getrpctransactionbytxhash",
+  ["rpc_transaction_info", {
+    name: "rpc_transaction_info",
     description: `This endpoint returns detailed information for a specific Bitcoin transaction, by its unique transaction hash.`,
     inputSchema: {"type":"object","properties":{"tx_hash":{"type":"string","description":"Transaction hash."},"verbose":{"default":false,"type":"boolean","description":"Verbose."}},"required":["tx_hash"]},
     method: "get",
@@ -973,6 +1004,7 @@ async function executeApiTool(
         headers['content-type'] = definition.requestBodyContentType;
     }
 
+
     // Apply security requirements if available
     // Security requirements use OR between array items and AND within each object
     const appliedSecurity = definition.securityRequirements?.find(req => {
@@ -983,7 +1015,7 @@ async function executeApiTool(
             
             // API Key security (header, query, cookie)
             if (scheme.type === 'apiKey') {
-                return !!process.env[`MAESTRO_API_KEY`];
+                return !!process.env[`API_KEY_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
             }
             
             // HTTP security (basic, bearer)
@@ -1033,7 +1065,7 @@ async function executeApiTool(
             
             // API Key security
             if (scheme?.type === 'apiKey') {
-                const apiKey = process.env[`MAESTRO_API_KEY`];
+                const apiKey = process.env[`API_KEY_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
                 if (apiKey) {
                     if (scheme.in === 'header') {
                         headers[scheme.name.toLowerCase()] = apiKey;
@@ -1207,13 +1239,11 @@ async function executeApiTool(
  * Main function to start the server
  */
 async function main() {
-// Set up stdio transport
+// Set up StreamableHTTP transport
   try {
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    console.error(`${SERVER_NAME} MCP Server (v${SERVER_VERSION}) running on stdio${API_BASE_URL ? `, proxying API at ${API_BASE_URL}` : ''}`);
+    await setupStreamableHttpServer(server, 3000);
   } catch (error) {
-    console.error("Error during server startup:", error);
+    console.error("Error setting up StreamableHTTP server:", error);
     process.exit(1);
   }
 }

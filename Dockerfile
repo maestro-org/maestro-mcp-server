@@ -1,4 +1,4 @@
-FROM node:22 AS maestro-mcp-server
+FROM node:24 AS maestro-mcp-server
 
 LABEL org.opencontainers.image.source=https://github.com/maestro-org/maestro-mcp-server
 
@@ -14,4 +14,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["npm", "start:http"]
