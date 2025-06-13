@@ -41,7 +41,7 @@ npm run start:http
 Generated with [openapi-mcp-generator](https://github.com/harsha-iiiv/openapi-mcp-generator):
 
 ```bash
-npx openapi-mcp-generator --input openapi-merged.json --output ./ --force
+npx openapi-mcp-generator --input openapi-merged.json --output ./ --force --transport streamable-http --port 3000
 ```
 
 > **Warning**  
