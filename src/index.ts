@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * MCP Server generated from OpenAPI spec for bitcoin---blockchain-indexer-api vv0.2.0
- * Generated on: 2025-06-16T20:39:05.648Z
+ * Generated on: 2025-06-16T21:43:11.657Z
  */
 
 // Load environment variables from .env file
@@ -527,8 +527,8 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["satoshi_activity_by_address1", {
-    name: "satoshi_activity_by_address1",
+  ["wallet_satoshi_activity_by_address", {
+    name: "wallet_satoshi_activity_by_address",
     description: `Returns all transactions for a given address or script pubkey, allowing insight into when the balance increased, decreased, or remained the same. This endpoint supports customization to narrow results by time, transaction type, or ordering, enabling tailored historical views.`,
     inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"},"order":{"allOf":[{"type":"string","default":"asc","enum":["asc","desc"]}],"type":"null","description":"The order in which the results are sorted. Supported values: asc, desc"},"count":{"allOf":[{"type":"integer","default":100,"minimum":0}],"type":"null","description":"The max number of results per page"},"from":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only transactions included on or after a specific height"},"to":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only transactions included on or before a specific height"},"cursor":{"type":["string","null"],"description":"Pagination cursor string, use the cursor included in a page of results to fetch the next page"},"activity_kind":{"allOf":[{"type":"string","enum":["self_transfer","increase","decrease"]}],"type":"null","description":"Only return transactions of a specific activity kind. Supported values: \"increase\" for transactions where satoshi balance increases, \"decrease\" for decrease, and \"self_transfer\" for transactions where satoshi balance remained the same."},"exclude_self_transfers":{"type":["boolean","null"],"description":"Do not return self-transfer transactions - transactions in which satoshi balance did not increase or decrease."}},"required":["address"]},
     method: "get",
@@ -537,8 +537,8 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["metaprotocol_activity_by_address", {
-    name: "metaprotocol_activity_by_address",
+  ["wallet_metaprotocol_activity_by_address", {
+    name: "wallet_metaprotocol_activity_by_address",
     description: `Return all transactions where the specified address has satoshi and/or metaprotocols activity. Supported metaprotocols: runes, inscriptions.`,
     inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"},"order":{"allOf":[{"type":"string","default":"asc","enum":["asc","desc"]}],"type":"null","description":"The order in which the results are sorted. Supported values: asc, desc"},"count":{"allOf":[{"type":"integer","default":100,"minimum":0}],"type":"null","description":"The max number of results per page"},"from":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only UTxOs created on or after a specific height"},"to":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only UTxOs created on or before a specific height"},"cursor":{"type":["string","null"],"description":"Pagination cursor string, use the cursor included in a page of results to fetch the next page"}},"required":["address"]},
     method: "get",
@@ -547,8 +547,8 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["historical_satoshi_balance_by_address1", {
-    name: "historical_satoshi_balance_by_address1",
+  ["wallet_historical_satoshi_balance_by_address", {
+    name: "wallet_historical_satoshi_balance_by_address",
     description: `Returns the historical satoshi balances, itemized by block and including USD price.`,
     inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"},"order":{"allOf":[{"type":"string","default":"asc","enum":["asc","desc"]}],"type":"null","description":"The order in which the results are sorted. Supported values: asc, desc"},"count":{"allOf":[{"type":"integer","default":100,"minimum":0}],"type":"null","description":"The max number of results per page"},"from":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only blocks included on or after a specific height or timestamps. If this parameter is not provided, the starting point will be the first block where the address has seen its balance increase or decrease."},"to":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only blocks included on or before a specific height or timestamp"},"cursor":{"type":["string","null"],"description":"Pagination cursor string, use the cursor included in a page of results to fetch the next page"},"height_params":{"type":["boolean","null"],"description":"Whether the from and to integer query params should be read as timestamps or as block heights. True (the default) means from and to params should be read as block heights."}},"required":["address"]},
     method: "get",
@@ -557,8 +557,8 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["inscription_activity_by_address1", {
-    name: "inscription_activity_by_address1",
+  ["wallet_inscription_activity_by_address", {
+    name: "wallet_inscription_activity_by_address",
     description: `Returns all inscription-related transactions involving a specific address. Can be filtered by activity type (send, receive, self-transfer), narrowed to a specific inscription, and sorted chronologically. Useful for building dashboards, tracking user behavior, or filtering unwanted spam activity.`,
     inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"},"order":{"allOf":[{"type":"string","default":"asc","enum":["asc","desc"]}],"type":"null","description":"The order in which the results are sorted. Supported values: asc, desc"},"count":{"allOf":[{"type":"integer","default":100,"minimum":0}],"type":"null","description":"The max number of results per page"},"from":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only transactions created on or after a specific height"},"to":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only transactions created on or before a specific height"},"cursor":{"type":["string","null"],"description":"Pagination cursor string, use the cursor included in a page of results to fetch the next page"},"inscription_id":{"type":["string","null"],"description":"Return only transactions containing a specific inscription, specified by an inscription ID. In presence of activity_kind, it relates to this specific inscription. In presence of exclude_self_transfers, it is this specific inscription that should be sent or received but not self-transferred."},"activity_kind":{"allOf":[{"type":"string","enum":["self_transfer","send","receive"]}],"type":"null","description":"Filter txs by presence of specific activity kind. Supported values: send, receive, self_transfer. In presence of inscription filter, the activity kind relates to that specific inscription. In presence of exclude_self_transfers, this activity kind cannot be self_transfer."},"exclude_self_transfers":{"type":["boolean","null"],"description":"Exclude txs only containing inscriptions self-transfers. In presence of activity_kind, it cannot be self_transfer. In presence of inscription filter, that specific inscription should be sent or received, not self-transferred."}},"required":["address"]},
     method: "get",
@@ -567,8 +567,8 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["rune_activity_by_address1", {
-    name: "rune_activity_by_address1",
+  ["wallet_rune_activity_by_address", {
+    name: "wallet_rune_activity_by_address",
     description: `Return all transactions where the specified address has rune activity, with the option to filter by a specific rune kind.`,
     inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"},"order":{"allOf":[{"type":"string","default":"asc","enum":["asc","desc"]}],"type":"null","description":"The order in which the results are sorted. Supported values: asc, desc"},"count":{"allOf":[{"type":"integer","default":100,"minimum":0}],"type":"null","description":"The max number of results per page"},"from":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only transactions created on or after a specific height"},"to":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only transactions created on or before a specific height"},"cursor":{"type":["string","null"],"description":"Pagination cursor string, use the cursor included in a page of results to fetch the next page"},"rune":{"type":["string","null"],"description":"Return only transactions containing a specific rune, specified either by the rune ID (etching block number and transaction index) or name (spaced or un-spaced). In presence of activity_kind, it relates to this specific rune. In presence of exclude_self_transfers, it is this specific rune that the queried address should see increase or decrease in balance in the tx, not just being self-transferred."},"activity_kind":{"allOf":[{"type":"string","enum":["self_transfer","increase","decrease"]}],"type":"null","description":"Filter txs by presence specific activity kind. Supported values: increased, decreased, self_transfer. In presence of rune filter, the activity kind relates to that specific rune. In presence of exclude_self_transfers, this activity kind cannot be self_transfer."},"exclude_self_transfers":{"type":["boolean","null"],"description":"Exclude txs only containing runes self-transfers. In presence of activity_kind, it cannot be self_transfer. In presence of rune filter, that specific rune should be sent or received, not self-transferred."}},"required":["address"]},
     method: "get",
@@ -577,8 +577,8 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
-  ["address_statistics1", {
-    name: "address_statistics1",
+  ["wallet_address_statistics", {
+    name: "wallet_address_statistics",
     description: `Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, and current satoshi, rune and inscription balance.`,
     inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"}},"required":["address"]},
     method: "get",
