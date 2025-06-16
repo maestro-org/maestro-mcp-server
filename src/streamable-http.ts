@@ -162,7 +162,7 @@ class MCPStreamableHttpServer {
  * @param port The port to listen on (default: 3000)
  * @returns The Hono app instance
  */
-export async function setupStreamableHttpServer(server: Server, port = 3000, hostname = 'localhost') {
+export async function setupStreamableHttpServer(server: Server, port = 3000) {
   // Create Hono app
   const app = new Hono();
   
@@ -239,9 +239,9 @@ export async function setupStreamableHttpServer(server: Server, port = 3000, hos
     fetch: app.fetch,
     port
   }, (info) => {
-    console.error(`MCP StreamableHTTP Server running at http://${hostname}:${info.port}`);
-    console.error(`- MCP Endpoint: http://${hostname}:${info.port}/mcp`);
-    console.error(`- Health Check: http://${hostname}:${info.port}/health`);
+    console.error(`MCP StreamableHTTP Server running at http://localhost:${info.port}`);
+    console.error(`- MCP Endpoint: http://localhost:${info.port}/mcp`);
+    console.error(`- Health Check: http://localhost:${info.port}/health`);
   });
   
   return app;

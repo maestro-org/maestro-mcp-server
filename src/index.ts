@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * MCP Server generated from OpenAPI spec for bitcoin---blockchain-indexer-api vv0.2.0
- * Generated on: 2025-06-13T18:27:43.448Z
+ * Generated on: 2025-06-16T20:39:05.648Z
  */
 
 // Load environment variables from .env file
@@ -503,6 +503,18 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
+  ["tx_info_with_metaprotocols1", {
+    name: "tx_info_with_metaprotocols1",
+    description: `Returns an enhanced view of the transaction, including info about metaprotocols in both inputs and outputs. Useful for deep inspection tools.
+
+In addition to confirmed transactions, mempool endpoints return data which reflects pending transactions in some number of "estimated" blocks - predicted blocks containing transactions which have been propagated around the network but not yet included in a mined block, with transactions with a higher sat/vB value being prioritised. The response details how many of these estimated blocks were considered when fetching the data.`,
+    inputSchema: {"type":"object","properties":{"tx_hash":{"type":"string","description":"Transaction hash"}},"required":["tx_hash"]},
+    method: "get",
+    pathTemplate: "/mempool/transactions/{tx_hash}/metaprotocols",
+    executionParameters: [{"name":"tx_hash","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
   ["mempool_tx_output_info", {
     name: "mempool_tx_output_info",
     description: `Provides detailed information for a single transaction output, including its value, spend status, and any attached metadata such as Ordinal inscriptions, Runes, or BRC20 data.
@@ -535,6 +547,16 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
+  ["historical_satoshi_balance_by_address1", {
+    name: "historical_satoshi_balance_by_address1",
+    description: `Returns the historical satoshi balances, itemized by block and including USD price.`,
+    inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"},"order":{"allOf":[{"type":"string","default":"asc","enum":["asc","desc"]}],"type":"null","description":"The order in which the results are sorted. Supported values: asc, desc"},"count":{"allOf":[{"type":"integer","default":100,"minimum":0}],"type":"null","description":"The max number of results per page"},"from":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only blocks included on or after a specific height or timestamps. If this parameter is not provided, the starting point will be the first block where the address has seen its balance increase or decrease."},"to":{"type":["number","null"],"format":"int64","minimum":0,"description":"Return only blocks included on or before a specific height or timestamp"},"cursor":{"type":["string","null"],"description":"Pagination cursor string, use the cursor included in a page of results to fetch the next page"},"height_params":{"type":["boolean","null"],"description":"Whether the from and to integer query params should be read as timestamps or as block heights. True (the default) means from and to params should be read as block heights."}},"required":["address"]},
+    method: "get",
+    pathTemplate: "/wallet/addresses/{address}/balance/historical",
+    executionParameters: [{"name":"address","in":"path"},{"name":"order","in":"query"},{"name":"count","in":"query"},{"name":"from","in":"query"},{"name":"to","in":"query"},{"name":"cursor","in":"query"},{"name":"height_params","in":"query"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
   ["inscription_activity_by_address1", {
     name: "inscription_activity_by_address1",
     description: `Returns all inscription-related transactions involving a specific address. Can be filtered by activity type (send, receive, self-transfer), narrowed to a specific inscription, and sorted chronologically. Useful for building dashboards, tracking user behavior, or filtering unwanted spam activity.`,
@@ -552,6 +574,16 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     method: "get",
     pathTemplate: "/wallet/addresses/{address}/runes/activity",
     executionParameters: [{"name":"address","in":"path"},{"name":"order","in":"query"},{"name":"count","in":"query"},{"name":"from","in":"query"},{"name":"to","in":"query"},{"name":"cursor","in":"query"},{"name":"rune","in":"query"},{"name":"activity_kind","in":"query"},{"name":"exclude_self_transfers","in":"query"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["address_statistics1", {
+    name: "address_statistics1",
+    description: `Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, and current satoshi, rune and inscription balance.`,
+    inputSchema: {"type":"object","properties":{"address":{"type":"string","description":"Bitcoin address or hex encoded script pubkey"}},"required":["address"]},
+    method: "get",
+    pathTemplate: "/wallet/addresses/{address}/statistics",
+    executionParameters: [{"name":"address","in":"path"}],
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
@@ -787,6 +819,244 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     method: "get",
     pathTemplate: "/rpc/transaction/{tx_hash}",
     executionParameters: [{"name":"tx_hash","in":"path"},{"name":"verbose","in":"query"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_healthcheck", {
+    name: "event_manager_v1_eventmanagerservice_healthcheck",
+    description: `Healthcheck`,
+    inputSchema: {"type":"object","properties":{}},
+    method: "get",
+    pathTemplate: "/eventmanager/healthcheck",
+    executionParameters: [],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_listmanagers", {
+    name: "event_manager_v1_eventmanagerservice_listmanagers",
+    description: `List all event managers
+
+ Returns a list of all event managers associated with the API key. These represent configured webhook listeners for blockchain events.`,
+    inputSchema: {"type":"object","properties":{}},
+    method: "get",
+    pathTemplate: "/eventmanager/managers",
+    executionParameters: [],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_createmanager", {
+    name: "event_manager_v1_eventmanagerservice_createmanager",
+    description: `Create a new event manager
+
+ Creates a new event manager that defines a webhook URL and related triggers.`,
+    inputSchema: {"type":"object","properties":{"requestBody":{"type":"object","properties":{"name":{"type":"string","title":"name"},"chain":{"title":"chain","type":"string","enum":["CHAIN_UNSPECIFIED","CHAIN_BITCOIN"]},"network":{"title":"network","type":"string","enum":["NETWORK_UNSPECIFIED","NETWORK_MAINNET","NETWORK_TESTNET"]},"webhookUrl":{"type":"string","title":"webhook_url"},"triggers":{"type":"array","items":{"type":"object","properties":{"eventManagerId":{"type":"string","title":"event_manager_id"},"triggerType":{"title":"trigger_type","type":"string","enum":["TRIGGER_TYPE_UNSPECIFIED","TRIGGER_TYPE_TRANSACTION","TRIGGER_TYPE_SENDER","TRIGGER_TYPE_RECEIVER","TRIGGER_TYPE_SENDER_OR_RECEIVER"]},"trackedId":{"type":"string","title":"tracked_id"},"filters":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string","title":"key"},"operator":{"type":"string","title":"operator"},"value":{"type":"string","title":"value"}},"title":"Filter","additionalProperties":false},"title":"filters"}},"title":"CreateTriggerRequest","additionalProperties":false},"title":"triggers"}},"title":"CreateManagerRequest","additionalProperties":false,"description":"The JSON request body."}},"required":["requestBody"]},
+    method: "post",
+    pathTemplate: "/eventmanager/managers",
+    executionParameters: [],
+    requestBodyContentType: "application/json",
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_getmanager", {
+    name: "event_manager_v1_eventmanagerservice_getmanager",
+    description: `Fetch a specific event manager
+
+ Retrieves the configuration of a specific manager identified by its unique \`id\`.`,
+    inputSchema: {"type":"object","properties":{"id":{"type":"string","title":"id"}},"required":["id"]},
+    method: "get",
+    pathTemplate: "/eventmanager/managers/{id}",
+    executionParameters: [{"name":"id","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_updatemanager", {
+    name: "event_manager_v1_eventmanagerservice_updatemanager",
+    description: `Update an existing event manager
+
+ Updates an event manager’s metadata, webhook, or attached triggers identified by its unique \`id\`.`,
+    inputSchema: {"type":"object","properties":{"id":{"type":"string","title":"id"},"requestBody":{"type":"object","properties":{"eventManager":{"type":"object","properties":{"id":{"type":"string","title":"id"},"name":{"type":"string","title":"name"},"chain":{"title":"chain","type":"string","enum":["CHAIN_UNSPECIFIED","CHAIN_BITCOIN"]},"network":{"title":"network","type":"string","enum":["NETWORK_UNSPECIFIED","NETWORK_MAINNET","NETWORK_TESTNET"]},"webhookUrl":{"type":"string","title":"webhook_url"},"status":{"type":"string","title":"status"},"triggers":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string","title":"id"},"eventManagerId":{"type":"string","title":"event_manager_id"},"triggerType":{"title":"trigger_type","type":"string","enum":["TRIGGER_TYPE_UNSPECIFIED","TRIGGER_TYPE_TRANSACTION","TRIGGER_TYPE_SENDER","TRIGGER_TYPE_RECEIVER","TRIGGER_TYPE_SENDER_OR_RECEIVER"]},"trackedId":{"type":"string","title":"tracked_id"},"filters":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string","title":"key"},"operator":{"type":"string","title":"operator"},"value":{"type":"string","title":"value"}},"title":"Filter","additionalProperties":false},"title":"filters"}},"title":"Trigger","additionalProperties":false},"title":"triggers"}},"title":"Manager","additionalProperties":false}},"title":"UpdateManagerRequest","additionalProperties":false,"description":"The JSON request body."}},"required":["id","requestBody"]},
+    method: "put",
+    pathTemplate: "/eventmanager/managers/{id}",
+    executionParameters: [{"name":"id","in":"path"}],
+    requestBodyContentType: "application/json",
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_deletemanager", {
+    name: "event_manager_v1_eventmanagerservice_deletemanager",
+    description: `Delete an event manager
+
+ Removes the manager and all associated triggers identified by its unique \`id\`.`,
+    inputSchema: {"type":"object","properties":{"id":{"type":"string","title":"id"}},"required":["id"]},
+    method: "delete",
+    pathTemplate: "/eventmanager/managers/{id}",
+    executionParameters: [{"name":"id","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_listtriggers", {
+    name: "event_manager_v1_eventmanagerservice_listtriggers",
+    description: `List all triggers
+
+ Returns all individual triggers associated with your event managers.`,
+    inputSchema: {"type":"object","properties":{}},
+    method: "get",
+    pathTemplate: "/eventmanager/triggers",
+    executionParameters: [],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_createtrigger", {
+    name: "event_manager_v1_eventmanagerservice_createtrigger",
+    description: `Create a new trigger
+
+ Adds a trigger to a manager to listen for specific blockchain activity.`,
+    inputSchema: {"type":"object","properties":{"requestBody":{"type":"object","properties":{"eventManagerId":{"type":"string","title":"event_manager_id"},"triggerType":{"title":"trigger_type","type":"string","enum":["TRIGGER_TYPE_UNSPECIFIED","TRIGGER_TYPE_TRANSACTION","TRIGGER_TYPE_SENDER","TRIGGER_TYPE_RECEIVER","TRIGGER_TYPE_SENDER_OR_RECEIVER"]},"trackedId":{"type":"string","title":"tracked_id"},"filters":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string","title":"key"},"operator":{"type":"string","title":"operator"},"value":{"type":"string","title":"value"}},"title":"Filter","additionalProperties":false},"title":"filters"}},"title":"CreateTriggerRequest","additionalProperties":false,"description":"The JSON request body."}},"required":["requestBody"]},
+    method: "post",
+    pathTemplate: "/eventmanager/triggers",
+    executionParameters: [],
+    requestBodyContentType: "application/json",
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_gettrigger", {
+    name: "event_manager_v1_eventmanagerservice_gettrigger",
+    description: `Fetch trigger details
+
+ Returns metadata and configuration for a specific trigger identified by its unique \`id\`.`,
+    inputSchema: {"type":"object","properties":{"id":{"type":"string","title":"id"}},"required":["id"]},
+    method: "get",
+    pathTemplate: "/eventmanager/triggers/{id}",
+    executionParameters: [{"name":"id","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_updatetrigger", {
+    name: "event_manager_v1_eventmanagerservice_updatetrigger",
+    description: `Update a trigger
+
+ Allows modification of a trigger's properties identified by its unique \`id\`.`,
+    inputSchema: {"type":"object","properties":{"id":{"type":"string","title":"id"},"requestBody":{"type":"object","properties":{"trigger":{"type":"object","properties":{"id":{"type":"string","title":"id"},"eventManagerId":{"type":"string","title":"event_manager_id"},"triggerType":{"title":"trigger_type","type":"string","enum":["TRIGGER_TYPE_UNSPECIFIED","TRIGGER_TYPE_TRANSACTION","TRIGGER_TYPE_SENDER","TRIGGER_TYPE_RECEIVER","TRIGGER_TYPE_SENDER_OR_RECEIVER"]},"trackedId":{"type":"string","title":"tracked_id"},"filters":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string","title":"key"},"operator":{"type":"string","title":"operator"},"value":{"type":"string","title":"value"}},"title":"Filter","additionalProperties":false},"title":"filters"}},"title":"Trigger","additionalProperties":false}},"title":"UpdateTriggerRequest","additionalProperties":false,"description":"The JSON request body."}},"required":["id","requestBody"]},
+    method: "put",
+    pathTemplate: "/eventmanager/triggers/{id}",
+    executionParameters: [{"name":"id","in":"path"}],
+    requestBodyContentType: "application/json",
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_deletetrigger", {
+    name: "event_manager_v1_eventmanagerservice_deletetrigger",
+    description: `Remove a trigger
+
+ Deletes a specific trigger identified by its unique \`id\`, leaving the event manager intact.`,
+    inputSchema: {"type":"object","properties":{"id":{"type":"string","title":"id"}},"required":["id"]},
+    method: "delete",
+    pathTemplate: "/eventmanager/triggers/{id}",
+    executionParameters: [{"name":"id","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_geteventlog", {
+    name: "event_manager_v1_eventmanagerservice_geteventlog",
+    description: `Fetch a single event log by ID
+
+ Returns the payload, status, and response of a specific event log identified by its unique \`id\`.`,
+    inputSchema: {"type":"object","properties":{"id":{"type":"string","title":"id"}},"required":["id"]},
+    method: "get",
+    pathTemplate: "/eventmanager/logs/{id}",
+    executionParameters: [{"name":"id","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_listeventlogs", {
+    name: "event_manager_v1_eventmanagerservice_listeventlogs",
+    description: `Fetch all event logs
+
+ Returns a list of event logs that have been generated from event manager triggers. Each log captures a payload, response status, and other metadata.`,
+    inputSchema: {"type":"object","properties":{}},
+    method: "get",
+    pathTemplate: "/eventmanager/logs",
+    executionParameters: [],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_getpicklistoptions", {
+    name: "event_manager_v1_eventmanagerservice_getpicklistoptions",
+    description: `Fetch picklist options by name
+
+ Returns a list of picklist options identified by its unique \`name\`.`,
+    inputSchema: {"type":"object","properties":{"name":{"type":"string","title":"name"}},"required":["name"]},
+    method: "get",
+    pathTemplate: "/eventmanager/picklist_options/{name}",
+    executionParameters: [{"name":"name","in":"path"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["event_manager_v1_eventmanagerservice_listdailycomputecredits", {
+    name: "event_manager_v1_eventmanagerservice_listdailycomputecredits",
+    description: `Fetch daily compute credits
+ 
+ Fetches the compute credits available (calculation for previous day).`,
+    inputSchema: {"type":"object","properties":{"requestBody":{"type":"object","properties":{"ids":{"type":"array","items":{"type":"string"},"title":"ids"},"date":{"title":"date","type":"string","examples":["1s","1.000340012s"],"format":"date-time","description":"A Timestamp represents a point in time independent of any time zone or local\n calendar, encoded as a count of seconds and fractions of seconds at\n nanosecond resolution. The count is relative to an epoch at UTC midnight on\n January 1, 1970, in the proleptic Gregorian calendar which extends the\n Gregorian calendar backwards to year one.\n\n All minutes are 60 seconds long. Leap seconds are \"smeared\" so that no leap\n second table is needed for interpretation, using a [24-hour linear\n smear](https://developers.google.com/time/smear).\n\n The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By\n restricting to that range, we ensure that we can convert to and from [RFC\n 3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.\n\n # Examples\n\n Example 1: Compute Timestamp from POSIX `time()`.\n\n     Timestamp timestamp;\n     timestamp.set_seconds(time(NULL));\n     timestamp.set_nanos(0);\n\n Example 2: Compute Timestamp from POSIX `gettimeofday()`.\n\n     struct timeval tv;\n     gettimeofday(&tv, NULL);\n\n     Timestamp timestamp;\n     timestamp.set_seconds(tv.tv_sec);\n     timestamp.set_nanos(tv.tv_usec * 1000);\n\n Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.\n\n     FILETIME ft;\n     GetSystemTimeAsFileTime(&ft);\n     UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;\n\n     // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z\n     // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.\n     Timestamp timestamp;\n     timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));\n     timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));\n\n Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.\n\n     long millis = System.currentTimeMillis();\n\n     Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)\n         .setNanos((int) ((millis % 1000) * 1000000)).build();\n\n Example 5: Compute Timestamp from Java `Instant.now()`.\n\n     Instant now = Instant.now();\n\n     Timestamp timestamp =\n         Timestamp.newBuilder().setSeconds(now.getEpochSecond())\n             .setNanos(now.getNano()).build();\n\n Example 6: Compute Timestamp from current time in Python.\n\n     timestamp = Timestamp()\n     timestamp.GetCurrentTime()\n\n # JSON Mapping\n\n In JSON format, the Timestamp type is encoded as a string in the\n [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the\n format is \"{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z\"\n where {year} is always expressed using four digits while {month}, {day},\n {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional\n seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),\n are optional. The \"Z\" suffix indicates the timezone (\"UTC\"); the timezone\n is required. A proto3 JSON serializer should always use UTC (as indicated by\n \"Z\") when printing the Timestamp type and a proto3 JSON parser should be\n able to accept both UTC and other timezones (as indicated by an offset).\n\n For example, \"2017-01-15T01:30:15.01Z\" encodes 15.01 seconds past\n 01:30 UTC on January 15, 2017.\n\n In JavaScript, one can convert a Date object to this format using the\n standard\n [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)\n method. In Python, a standard `datetime.datetime` object can be converted\n to this format using\n [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with\n the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use\n the Joda Time's [`ISODateTimeFormat.dateTime()`](\n http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()\n ) to obtain a formatter capable of generating timestamps in this format."}},"title":"ListDailyComputeCreditsRequest","additionalProperties":false,"description":"The JSON request body."}},"required":["requestBody"]},
+    method: "post",
+    pathTemplate: "/_internal/daily_credits",
+    executionParameters: [],
+    requestBodyContentType: "application/json",
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["mkt-btc-prices-by-timestamps", {
+    name: "mkt-btc-prices-by-timestamps",
+    description: `Returns BTC-USD prices for the provided list of UTC timestamps. Timestamps are matched against minute-aligned entries in the database.`,
+    inputSchema: {"type":"object","properties":{"requestBody":{"properties":{"timestamps":{"items":{"type":"number"},"maxItems":100,"minItems":1,"type":"array","uniqueItems":false}},"required":["timestamps"],"type":"object","description":"Array of UTC timestamps"}},"required":["requestBody"]},
+    method: "post",
+    pathTemplate: "/markets/btc/prices/batch",
+    executionParameters: [],
+    requestBodyContentType: "application/json",
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["mkt-btc-price-by-timestamp", {
+    name: "mkt-btc-price-by-timestamp",
+    description: `Returns BTC-USD price for the provided UTC timestamp.`,
+    inputSchema: {"type":"object","properties":{"timestamp":{"type":"number","description":"Unix timestamp in seconds"},"requestBody":{"type":"object","description":"The JSON request body."}},"required":["timestamp"]},
+    method: "get",
+    pathTemplate: "/markets/btc/prices/{timestamp}",
+    executionParameters: [{"name":"timestamp","in":"path"}],
+    requestBodyContentType: "application/json",
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["mkt-dexs", {
+    name: "mkt-dexs",
+    description: `Retrieves a list of all decentralized exchanges (DEXs) currently indexed and supported by the API. This serves as the discovery endpoint for clients to programmatically identify valid DEX identifiers used in other endpoints like trades or OHLC queries.`,
+    inputSchema: {"type":"object","properties":{}},
+    method: "get",
+    pathTemplate: "/markets/dexs",
+    executionParameters: [],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["mkt-dex-ohlc", {
+    name: "mkt-dex-ohlc",
+    description: `Returns candlestick-formatted market data (Open, High, Low, Close, Volume) for a specific DEX and Rune pair, segmented by time intervals. This is ideal for price charting, trend analysis, and historical performance. Data is sourced from both confirmed blocks and optionally from the mempool, depending on configuration.`,
+    inputSchema: {"type":"object","properties":{"dex":{"default":"magiceden","type":"string","description":"Name of the DEX"},"symbol":{"default":"BTC-840000:28","type":"string","description":"Symbol of the Rune asset trading pair (BTC-Rune ID)"},"mempool":{"default":"excluded","enum":["included","excluded","only"],"type":"string","description":"Mempool mode"},"resolution":{"default":"1h","enum":["1m","5m","15m","30m","1h","4h","1d","1w","1M"],"type":"string","description":"Time resolution (1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M)"},"from":{"default":"1735689600","type":"string","description":"Start timestamp in Unix"},"to":{"default":"1742428800","type":"string","description":"End timestamp in Unix"},"limit":{"default":5000,"maximum":50000,"minimum":1,"type":"number","description":"Limit number of Runes returned (min: 1, max: 50000)"},"sort":{"default":"desc","enum":["asc","desc"],"type":"string","description":"Sort by descending (desc) or ascending (asc)"},"carry":{"default":false,"type":"boolean","description":"Fill candles with no trades with synthetic data (OHLC filled with previous closing price, volume=0)"}},"required":["dex","symbol","resolution"]},
+    method: "get",
+    pathTemplate: "/markets/dexs/ohlc/{dex}/{symbol}",
+    executionParameters: [{"name":"dex","in":"path"},{"name":"symbol","in":"path"},{"name":"mempool","in":"query"},{"name":"resolution","in":"query"},{"name":"from","in":"query"},{"name":"to","in":"query"},{"name":"limit","in":"query"},{"name":"sort","in":"query"},{"name":"carry","in":"query"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["mkt-dex-trades", {
+    name: "mkt-dex-trades",
+    description: `Provides a time-series list of individual trades for a specified Rune pair on a given DEX, including granular data such as trade price (in satoshis), volume, block height, and buy/sell direction. Especially useful for high-frequency strategies or price feed services.`,
+    inputSchema: {"type":"object","properties":{"dex":{"default":"magiceden","type":"string","description":"Name of the DEX"},"symbol":{"default":"BTC-840000:28","type":"string","description":"Symbol of the Rune asset trading pair (BTC-Rune ID)"},"mempool":{"default":"excluded","enum":["included","excluded","only"],"type":"string","description":"Mempool mode"},"from":{"default":"1735689600","type":"string","description":"Start timestamp in Unix"},"to":{"default":"1742428800","type":"string","description":"End timestamp in Unix"},"limit":{"default":5000,"maximum":50000,"minimum":1,"type":"number","description":"Limit number of Runes returned (min: 1, max: 50000)"},"sort":{"default":"desc","enum":["asc","desc"],"type":"string","description":"Sort by descending (desc) or ascending (asc)"}},"required":["dex","symbol"]},
+    method: "get",
+    pathTemplate: "/markets/dexs/trades/{dex}/{symbol}",
+    executionParameters: [{"name":"dex","in":"path"},{"name":"symbol","in":"path"},{"name":"mempool","in":"query"},{"name":"from","in":"query"},{"name":"to","in":"query"},{"name":"limit","in":"query"},{"name":"sort","in":"query"}],
+    requestBodyContentType: undefined,
+    securityRequirements: [{"api-key":[]}]
+  }],
+  ["mkt-dex", {
+    name: "mkt-dex",
+    description: `Returns metadata for Rune assets registered and etched into the Bitcoin blockchain. This includes human-readable name, symbol, divisibility (decimals), and genesis transaction. Filtering by \`rune_id\` narrows the query to a specific asset.`,
+    inputSchema: {"type":"object","properties":{"rune_id":{"default":"840000:28","maxLength":16,"type":"string","description":"Bitcoin Rune ID"},"limit":{"default":5000,"maximum":50000,"minimum":1,"type":"number","description":"Limit number of Runes returned (min: 1, max: 50000)"},"sort":{"default":"desc","enum":["asc","desc"],"type":"string","description":"Sort by descending (desc) or ascending (asc)"}}},
+    method: "get",
+    pathTemplate: "/markets/runes",
+    executionParameters: [{"name":"rune_id","in":"query"},{"name":"limit","in":"query"},{"name":"sort","in":"query"}],
     requestBodyContentType: undefined,
     securityRequirements: [{"api-key":[]}]
   }],
@@ -1241,7 +1511,7 @@ async function executeApiTool(
 async function main() {
 // Set up StreamableHTTP transport
   try {
-    await setupStreamableHttpServer(server, 3000, process.env.HOST || 'localhost');
+    await setupStreamableHttpServer(server, 3000);
   } catch (error) {
     console.error("Error setting up StreamableHTTP server:", error);
     process.exit(1);
