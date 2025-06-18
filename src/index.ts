@@ -45,9 +45,9 @@ interface McpToolDefinition {
 /**
  * Server configuration
  */
-export const SERVER_NAME = 'bitcoin---blockchain-indexer-api';
+export const SERVER_NAME = 'Maestro Bitcoin API';
 export const SERVER_VERSION = 'v0.2.0';
-export const API_BASE_URL = 'https://xbt-mainnet.gomaestro-api.org/v0';
+export const API_BASE_URL = process.env.API_BASE_URL || 'https://xbt-mainnet.gomaestro-api.org/v0';
 
 /**
  * MCP Server instance
