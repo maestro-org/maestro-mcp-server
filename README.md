@@ -6,10 +6,7 @@ A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maest
 
 ## Quick Links
 
-- **Hosted Mainnet:** [`https://xbt-mainnet.gomaestro-api.org/v0/mcp`](https://xbt-mainnet.gomaestro-api.org/v0/mcp)
-- **Hosted Testnet4:** [`https://xbt-testnet.gomaestro-api.org/v0/mcp`](https://xbt-testnet.gomaestro-api.org/v0/mcp)
 - **API Key Required:** [Get your Maestro API key](https://docs.gomaestro.org/getting-started)
-- **Client Examples:** [maestro-mcp-client-examples](https://github.com/maestro-org/maestro-mcp-client-examples)
 
 ## Getting Started
 
@@ -34,22 +31,21 @@ cp .env.example .env
 ### Running the Server
 
 ```bash
-npm run start:http
+npm run start
 ```
 
-- The server will start on the port specified in your `.env` (default: 3000).
-- Access the MCP endpoint at `http://localhost:<PORT>/mcp`.
-
-## Features
-
-- 🚀 **Streamable HTTP MCP server** ([spec](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http))
+- Local MCP server
 - 🔑 **API Key authentication** (see `.env.example`)
 - 📦 **Multiple APIs:**
+
+  > [Full API Reference - Postman](https://www.postman.com/go-maestro/maestro-api/overview)
+
   - Blockchain Indexer
   - Mempool Monitoring
   - Market Price
   - Wallet
   - Node RPC
+
 - 🌐 **Supported Networks:**
   - Mainnet: `API_BASE_URL=https://xbt-mainnet.gomaestro-api.org/v0`
   - Testnet4: `API_BASE_URL=https://xbt-testnet.gomaestro-api.org/v0`
@@ -151,16 +147,6 @@ You will need 3 things:
 ```bash
 tail -n 20 -f ~/Library/Logs/Claude/maestro-mcp-server.log
 ```
-
-### Supported Services
-
-- Blockchain Indexer API
-- Mempool Monitoring API
-- Market Price API
-- Wallet API
-- Node RPC API
-
-All Maestro API specifications can be found in our Postman [workspace](https://www.postman.com/go-maestro/maestro-api/overview).
 
 ## Contributing & Development
 
