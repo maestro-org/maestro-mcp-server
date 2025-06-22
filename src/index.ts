@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * MCP Server generated from OpenAPI spec for bitcoin---blockchain-indexer-api vv0.2.0
- * Generated on: 2025-06-16T21:43:11.657Z
+ * MCP Server generated from OpenAPI spec for bitcoin---merged-services-api v1.0.0
+ * Generated on: 2025-06-22T15:25:43.624Z
  */
 
 // Load environment variables from .env file
@@ -22,6 +22,10 @@ import { setupStreamableHttpServer } from './streamable-http.js';
 import { z, ZodError } from 'zod';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
+
+/* MAESTRO OVERRIDE */
+import { mcpHandler } from './streamable-http.js';
+/* MAESTRO OVERRIDE */
 
 /**
  * Type definition for JSON objects
@@ -592,7 +596,7 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
     'address_statistics',
     {
       name: 'address_statistics',
-      description: `Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, and current satoshi, rune and inscription balance.`,
+      description: `Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, current satoshi, control of any runes and inscription balance.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -953,7 +957,7 @@ A preview of the content body is given only if its type is \`"text/plain"\`. For
     'collection_metadata_by_inscription',
     {
       name: 'collection_metadata_by_inscription',
-      description: `Returns a complete list of all inscription IDs associated with a specific collection, identified by its symbol. This endpoint is ideal for indexing collection contents or powering gallery views. Pagination support allows for handling large collections efficiently.`,
+      description: `Returns metadata of a collection for a given inscription ID, including its name, image, supply and external links.`,
       inputSchema: {
         type: 'object',
         properties: { inscription_id: { type: 'string', description: 'Inscription ID' } },
@@ -2551,9 +2555,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_healthcheck',
+    'event_manager_v1_EventManagerService_Healthcheck',
     {
-      name: 'event_manager_v1_eventmanagerservice_healthcheck',
+      name: 'event_manager_v1_EventManagerService_Healthcheck',
       description: `Healthcheck`,
       inputSchema: { type: 'object', properties: {} },
       method: 'get',
@@ -2564,9 +2568,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_listmanagers',
+    'event_manager_v1_EventManagerService_ListManagers',
     {
-      name: 'event_manager_v1_eventmanagerservice_listmanagers',
+      name: 'event_manager_v1_EventManagerService_ListManagers',
       description: `List all event managers
 
  Returns a list of all event managers associated with the API key. These represent configured webhook listeners for blockchain events.`,
@@ -2579,9 +2583,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_createmanager',
+    'event_manager_v1_EventManagerService_CreateManager',
     {
-      name: 'event_manager_v1_eventmanagerservice_createmanager',
+      name: 'event_manager_v1_EventManagerService_CreateManager',
       description: `Create a new event manager
 
  Creates a new event manager that defines a webhook URL and related triggers.`,
@@ -2657,9 +2661,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_getmanager',
+    'event_manager_v1_EventManagerService_GetManager',
     {
-      name: 'event_manager_v1_eventmanagerservice_getmanager',
+      name: 'event_manager_v1_EventManagerService_GetManager',
       description: `Fetch a specific event manager
 
  Retrieves the configuration of a specific manager identified by its unique \`id\`.`,
@@ -2676,9 +2680,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_updatemanager',
+    'event_manager_v1_EventManagerService_UpdateManager',
     {
-      name: 'event_manager_v1_eventmanagerservice_updatemanager',
+      name: 'event_manager_v1_EventManagerService_UpdateManager',
       description: `Update an existing event manager
 
  Updates an event manager’s metadata, webhook, or attached triggers identified by its unique \`id\`.`,
@@ -2765,9 +2769,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_deletemanager',
+    'event_manager_v1_EventManagerService_DeleteManager',
     {
-      name: 'event_manager_v1_eventmanagerservice_deletemanager',
+      name: 'event_manager_v1_EventManagerService_DeleteManager',
       description: `Delete an event manager
 
  Removes the manager and all associated triggers identified by its unique \`id\`.`,
@@ -2784,9 +2788,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_listtriggers',
+    'event_manager_v1_EventManagerService_ListTriggers',
     {
-      name: 'event_manager_v1_eventmanagerservice_listtriggers',
+      name: 'event_manager_v1_EventManagerService_ListTriggers',
       description: `List all triggers
 
  Returns all individual triggers associated with your event managers.`,
@@ -2799,9 +2803,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_createtrigger',
+    'event_manager_v1_EventManagerService_CreateTrigger',
     {
-      name: 'event_manager_v1_eventmanagerservice_createtrigger',
+      name: 'event_manager_v1_EventManagerService_CreateTrigger',
       description: `Create a new trigger
 
  Adds a trigger to a manager to listen for specific blockchain activity.`,
@@ -2854,9 +2858,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_gettrigger',
+    'event_manager_v1_EventManagerService_GetTrigger',
     {
-      name: 'event_manager_v1_eventmanagerservice_gettrigger',
+      name: 'event_manager_v1_EventManagerService_GetTrigger',
       description: `Fetch trigger details
 
  Returns metadata and configuration for a specific trigger identified by its unique \`id\`.`,
@@ -2873,9 +2877,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_updatetrigger',
+    'event_manager_v1_EventManagerService_UpdateTrigger',
     {
-      name: 'event_manager_v1_eventmanagerservice_updatetrigger',
+      name: 'event_manager_v1_EventManagerService_UpdateTrigger',
       description: `Update a trigger
 
  Allows modification of a trigger's properties identified by its unique \`id\`.`,
@@ -2937,9 +2941,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_deletetrigger',
+    'event_manager_v1_EventManagerService_DeleteTrigger',
     {
-      name: 'event_manager_v1_eventmanagerservice_deletetrigger',
+      name: 'event_manager_v1_EventManagerService_DeleteTrigger',
       description: `Remove a trigger
 
  Deletes a specific trigger identified by its unique \`id\`, leaving the event manager intact.`,
@@ -2956,9 +2960,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_geteventlog',
+    'event_manager_v1_EventManagerService_GetEventLog',
     {
-      name: 'event_manager_v1_eventmanagerservice_geteventlog',
+      name: 'event_manager_v1_EventManagerService_GetEventLog',
       description: `Fetch a single event log by ID
 
  Returns the payload, status, and response of a specific event log identified by its unique \`id\`.`,
@@ -2975,9 +2979,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_listeventlogs',
+    'event_manager_v1_EventManagerService_ListEventLogs',
     {
-      name: 'event_manager_v1_eventmanagerservice_listeventlogs',
+      name: 'event_manager_v1_EventManagerService_ListEventLogs',
       description: `Fetch all event logs
 
  Returns a list of event logs that have been generated from event manager triggers. Each log captures a payload, response status, and other metadata.`,
@@ -2990,9 +2994,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_getpicklistoptions',
+    'event_manager_v1_EventManagerService_GetPicklistOptions',
     {
-      name: 'event_manager_v1_eventmanagerservice_getpicklistoptions',
+      name: 'event_manager_v1_EventManagerService_GetPicklistOptions',
       description: `Fetch picklist options by name
 
  Returns a list of picklist options identified by its unique \`name\`.`,
@@ -3009,9 +3013,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_eventmanagerservice_listdailycomputecredits',
+    'event_manager_v1_EventManagerService_ListDailyComputeCredits',
     {
-      name: 'event_manager_v1_eventmanagerservice_listdailycomputecredits',
+      name: 'event_manager_v1_EventManagerService_ListDailyComputeCredits',
       description: `Fetch daily compute credits
  
  Fetches the compute credits available (calculation for previous day).`,
@@ -3302,7 +3306,14 @@ server.setRequestHandler(
       console.error(`Error: Unknown tool requested: ${toolName}`);
       return { content: [{ type: 'text', text: `Error: Unknown tool requested: ${toolName}` }] };
     }
-    return await executeApiTool(toolName, toolDefinition, toolArgs ?? {}, securitySchemes);
+
+    return await executeApiTool(
+      toolName,
+      toolDefinition,
+      toolArgs ?? {},
+      securitySchemes,
+      mcpHandler.getBearerAuth()
+    );
   }
 );
 
@@ -3438,7 +3449,8 @@ async function executeApiTool(
   toolName: string,
   definition: McpToolDefinition,
   toolArgs: JsonObject,
-  allSecuritySchemes: Record<string, any>
+  allSecuritySchemes: Record<string, any>,
+  bearerAuth?: string
 ): Promise<CallToolResult> {
   try {
     // Validate arguments against the input schema
@@ -3497,8 +3509,11 @@ async function executeApiTool(
       headers['content-type'] = definition.requestBodyContentType;
     }
 
-    /* MAESTRO OVERRIDE: Ignore security schema checking and pass API key directly for now */
-    headers['api-key'] = toolArgs['api-key'];
+    /* MAESTRO OVERRIDE */
+    if (bearerAuth) {
+      headers['api-key'] = bearerAuth;
+    }
+    /* MAESTRO OVERRIDE */
 
     // // Apply security requirements if available
     // // Security requirements use OR between array items and AND within each object
@@ -3571,117 +3586,106 @@ async function executeApiTool(
 
     // // If we found matching security scheme(s), apply them
     // if (appliedSecurity) {
-    //   // Apply each security scheme from this requirement (combined with AND)
-    //   for (const [schemeName, scopesArray] of Object.entries(appliedSecurity)) {
-    //     const scheme = allSecuritySchemes[schemeName];
+    //     // Apply each security scheme from this requirement (combined with AND)
+    //     for (const [schemeName, scopesArray] of Object.entries(appliedSecurity)) {
+    //         const scheme = allSecuritySchemes[schemeName];
 
-    //     // API Key security
-    //     if (scheme?.type === 'apiKey') {
-    //       const apiKey =
-    //         process.env[`API_KEY_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
-    //       if (apiKey) {
-    //         if (scheme.in === 'header') {
-    //           headers[scheme.name.toLowerCase()] = apiKey;
-    //           console.error(`Applied API key '${schemeName}' in header '${scheme.name}'`);
-    //         } else if (scheme.in === 'query') {
-    //           queryParams[scheme.name] = apiKey;
-    //           console.error(`Applied API key '${schemeName}' in query parameter '${scheme.name}'`);
-    //         } else if (scheme.in === 'cookie') {
-    //           // Add the cookie, preserving other cookies if they exist
-    //           headers['cookie'] = `${scheme.name}=${apiKey}${
-    //             headers['cookie'] ? `; ${headers['cookie']}` : ''
-    //           }`;
-    //           console.error(`Applied API key '${schemeName}' in cookie '${scheme.name}'`);
+    //         // API Key security
+    //         if (scheme?.type === 'apiKey') {
+    //             const apiKey = process.env[`API_KEY_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+    //             if (apiKey) {
+    //                 if (scheme.in === 'header') {
+    //                     headers[scheme.name.toLowerCase()] = apiKey;
+    //                     console.error(`Applied API key '${schemeName}' in header '${scheme.name}'`);
+    //                 }
+    //                 else if (scheme.in === 'query') {
+    //                     queryParams[scheme.name] = apiKey;
+    //                     console.error(`Applied API key '${schemeName}' in query parameter '${scheme.name}'`);
+    //                 }
+    //                 else if (scheme.in === 'cookie') {
+    //                     // Add the cookie, preserving other cookies if they exist
+    //                     headers['cookie'] = `${scheme.name}=${apiKey}${headers['cookie'] ? `; ${headers['cookie']}` : ''}`;
+    //                     console.error(`Applied API key '${schemeName}' in cookie '${scheme.name}'`);
+    //                 }
+    //             }
     //         }
-    //       }
+    //         // HTTP security (Bearer or Basic)
+    //         else if (scheme?.type === 'http') {
+    //             if (scheme.scheme?.toLowerCase() === 'bearer') {
+    //                 const token = process.env[`BEARER_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+    //                 if (token) {
+    //                     headers['authorization'] = `Bearer ${token}`;
+    //                     console.error(`Applied Bearer token for '${schemeName}'`);
+    //                 }
+    //             }
+    //             else if (scheme.scheme?.toLowerCase() === 'basic') {
+    //                 const username = process.env[`BASIC_USERNAME_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+    //                 const password = process.env[`BASIC_PASSWORD_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+    //                 if (username && password) {
+    //                     headers['authorization'] = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+    //                     console.error(`Applied Basic authentication for '${schemeName}'`);
+    //                 }
+    //             }
+    //         }
+    //         // OAuth2 security
+    //         else if (scheme?.type === 'oauth2') {
+    //             // First try to use a pre-provided token
+    //             let token = process.env[`OAUTH_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+
+    //             // If no token but we have client credentials, try to acquire a token
+    //             if (!token && (scheme.flows?.clientCredentials || scheme.flows?.password)) {
+    //                 console.error(`Attempting to acquire OAuth token for '${schemeName}'`);
+    //                 token = (await acquireOAuth2Token(schemeName, scheme)) ?? '';
+    //             }
+
+    //             // Apply token if available
+    //             if (token) {
+    //                 headers['authorization'] = `Bearer ${token}`;
+    //                 console.error(`Applied OAuth2 token for '${schemeName}'`);
+
+    //                 // List the scopes that were requested, if any
+    //                 const scopes = scopesArray as string[];
+    //                 if (scopes && scopes.length > 0) {
+    //                     console.error(`Requested scopes: ${scopes.join(', ')}`);
+    //                 }
+    //             }
+    //         }
+    //         // OpenID Connect
+    //         else if (scheme?.type === 'openIdConnect') {
+    //             const token = process.env[`OPENID_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+    //             if (token) {
+    //                 headers['authorization'] = `Bearer ${token}`;
+    //                 console.error(`Applied OpenID Connect token for '${schemeName}'`);
+
+    //                 // List the scopes that were requested, if any
+    //                 const scopes = scopesArray as string[];
+    //                 if (scopes && scopes.length > 0) {
+    //                     console.error(`Requested scopes: ${scopes.join(', ')}`);
+    //                 }
+    //             }
+    //         }
     //     }
-    //     // HTTP security (Bearer or Basic)
-    //     else if (scheme?.type === 'http') {
-    //       if (scheme.scheme?.toLowerCase() === 'bearer') {
-    //         const token =
-    //           process.env[`BEARER_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
-    //         if (token) {
-    //           headers['authorization'] = `Bearer ${token}`;
-    //           console.error(`Applied Bearer token for '${schemeName}'`);
-    //         }
-    //       } else if (scheme.scheme?.toLowerCase() === 'basic') {
-    //         const username =
-    //           process.env[
-    //             `BASIC_USERNAME_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`
-    //           ];
-    //         const password =
-    //           process.env[
-    //             `BASIC_PASSWORD_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`
-    //           ];
-    //         if (username && password) {
-    //           headers['authorization'] = `Basic ${Buffer.from(`${username}:${password}`).toString(
-    //             'base64'
-    //           )}`;
-    //           console.error(`Applied Basic authentication for '${schemeName}'`);
-    //         }
-    //       }
-    //     }
-    //     // OAuth2 security
-    //     else if (scheme?.type === 'oauth2') {
-    //       // First try to use a pre-provided token
-    //       let token =
-    //         process.env[`OAUTH_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
-
-    //       // If no token but we have client credentials, try to acquire a token
-    //       if (!token && (scheme.flows?.clientCredentials || scheme.flows?.password)) {
-    //         console.error(`Attempting to acquire OAuth token for '${schemeName}'`);
-    //         token = (await acquireOAuth2Token(schemeName, scheme)) ?? '';
-    //       }
-
-    //       // Apply token if available
-    //       if (token) {
-    //         headers['authorization'] = `Bearer ${token}`;
-    //         console.error(`Applied OAuth2 token for '${schemeName}'`);
-
-    //         // List the scopes that were requested, if any
-    //         const scopes = scopesArray as string[];
-    //         if (scopes && scopes.length > 0) {
-    //           console.error(`Requested scopes: ${scopes.join(', ')}`);
-    //         }
-    //       }
-    //     }
-    //     // OpenID Connect
-    //     else if (scheme?.type === 'openIdConnect') {
-    //       const token =
-    //         process.env[`OPENID_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
-    //       if (token) {
-    //         headers['authorization'] = `Bearer ${token}`;
-    //         console.error(`Applied OpenID Connect token for '${schemeName}'`);
-
-    //         // List the scopes that were requested, if any
-    //         const scopes = scopesArray as string[];
-    //         if (scopes && scopes.length > 0) {
-    //           console.error(`Requested scopes: ${scopes.join(', ')}`);
-    //         }
-    //       }
-    //     }
-    //   }
     // }
     // // Log warning if security is required but not available
     // else if (definition.securityRequirements?.length > 0) {
-    //   // First generate a more readable representation of the security requirements
-    //   const securityRequirementsString = definition.securityRequirements
-    //     .map((req) => {
-    //       const parts = Object.entries(req)
-    //         .map(([name, scopesArray]) => {
-    //           const scopes = scopesArray as string[];
-    //           if (scopes.length === 0) return name;
-    //           return `${name} (scopes: ${scopes.join(', ')})`;
+    //     // First generate a more readable representation of the security requirements
+    //     const securityRequirementsString = definition.securityRequirements
+    //         .map(req => {
+    //             const parts = Object.entries(req)
+    //                 .map(([name, scopesArray]) => {
+    //                     const scopes = scopesArray as string[];
+    //                     if (scopes.length === 0) return name;
+    //                     return `${name} (scopes: ${scopes.join(', ')})`;
+    //                 })
+    //                 .join(' AND ');
+    //             return `[${parts}]`;
     //         })
-    //         .join(' AND ');
-    //       return `[${parts}]`;
-    //     })
-    //     .join(' OR ');
+    //         .join(' OR ');
 
-    //   console.warn(
-    //     `Tool '${toolName}' requires security: ${securityRequirementsString}, but no suitable credentials found.`
-    //   );
+    //     console.warn(`Tool '${toolName}' requires security: ${securityRequirementsString}, but no suitable credentials found.`);
     // }
+
+    /* MAESTRO OVERRIDE */
 
     // Prepare the axios request configuration
     const config: AxiosRequestConfig = {
