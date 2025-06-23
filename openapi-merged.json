@@ -1,13 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Bitcoin - Blockchain Indexer API",
-    "description": "This API provides core indexer endpoints with support for Bitcoin metaprotocols by delivering real-time, rollback-protected access to Bitcoin's UTXO data, enabling developers to build responsive and reliable blockchain applications without managing complex infrastructure.\n\n#### Key Features:\n- **Real-Time Data with Rollback Protection:** Ensures data accuracy by handling chain reorganizations gracefully, providing live data without sacrificing integrity.\n- **Comprehensive UTXO Indexing:** Specialized pipelines extract, match, and process on-chain information, including handling rollbacks, to provide accurate and up-to-date data.\n\n#### Key Benefits for Developers:\nBy abstracting the complexities of blockchain data retrieval and processing, Maestro's Bitcoin Indexer API empowers developers to focus on building innovative applications with confidence in fast and reliable access to historical chain data.",
-    "license": {
-      "name": "Apache 2.0",
-      "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-    },
-    "version": "v0.2.0"
+    "title": "Bitcoin - Merged Services API",
+    "version": "1.0.0",
+    "description": "Maestro's Bitcoin Merged Service API is a unified OpenAPI specification that combines multiple Bitcoin-related services into one comprehensive spec. It integrates endpoints from the following core services:\n\n - **Blockchain Indexer API:** Core Bitcoin endpoints with support for Bitcoin metaprotocols indexed for real-time, rollback-protected access to UTXO data such as transaction activity, address balances and block data.\n - **Event Manager API:** Programmable webhook infrastructure for tracking Bitcoin events like transactions, address activity, and related state changes via configurable triggers.\n - **Market Price API:** Real-time, rollback-protected DEX pricing data with deep network-level indexing for BTC and Rune assets.\n - **Mempool Monitoring API:** Core Bitcoin endpoints indexed with mempool awareness, providing real-time visibility into unconfirmed transactions and fees.\n - **Node RPC API:** Interaction with Bitcoin nodes for low-level operations like sending transactions and querying blockchain state.\n - **Wallet API:** Granular address-level visibility across native Bitcoin and metaprotocol assets like inscriptions and runes, enabling detailed tracking of balance changes, token activity, and historical balance changes with USD-denominated valuation over time."
   },
   "servers": [
     {
@@ -26,6 +22,11 @@
   "security": [
     {
       "api-key": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "event_manager.v1.EventManagerService"
     }
   ],
   "paths": {
@@ -192,6 +193,129 @@
                   "$ref": "#/components/schemas/TimestampedSatoshis"
                 },
                 "example": "{\n    \"data\": \"695100\",\n    \"last_updated\": {\n        \"block_hash\": \"000000000000000000005075404edd6edc806976389a9f7e2ff71db1c2cf9b83\",\n        \"block_height\": 884991\n    }\n}"
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed query parameters"
+          },
+          "404": {
+            "description": "Requested entity not found on-chain"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/addresses/{address}/balance/historical": {
+      "get": {
+        "tags": [
+          "Addresses"
+        ],
+        "summary": "Historical Satoshi Balance by Address",
+        "description": "Returns the historical satoshi balances, itemized by block and including USD price.",
+        "operationId": "historical_satoshi_balance_by_address",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Bitcoin address or hex encoded script pubkey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "bc1qcx7ys0ahvtfqcc63sfn6axls0qrhkadnslpd94"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "The order in which the results are sorted. Supported values: asc, desc",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "type": "string",
+                  "default": "asc",
+                  "enum": [
+                    "asc",
+                    "desc"
+                  ]
+                }
+              ],
+              "nullable": true
+            }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "The max number of results per page",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "type": "integer",
+                  "default": 100,
+                  "minimum": 0
+                }
+              ],
+              "nullable": true
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Return only blocks included on or after a specific height or timestamps. If this parameter is not provided, the starting point will be the first block where the address has seen its balance increase or decrease.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Return only blocks included on or before a specific height or timestamp",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Pagination cursor string, use the cursor included in a page of results to fetch the next page",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "height_params",
+            "in": "query",
+            "description": "Whether the from and to integer query params should be read as timestamps or as block heights. True (the default) means from and to params should be read as block heights.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedHistoricalSatBalanceByAddress"
+                },
+                "example": "{\n    \"data\": [{\n        \"height\": 899903,\n        \"confirmations\": 932,\n        \"unix_timestamp\": 1749126863,\n        \"timestamp\": \"2025-06-05 12:34:23\",\n        \"sat_balance\": \"155191\",\n        \"usd_balance\": \"163.59\"\n    }, {\n        \"height\": 899904,\n        \"confirmations\": 931,\n        \"unix_timestamp\": 1749126892,\n        \"timestamp\": \"2025-06-05 12:34:52\",\n        \"sat_balance\": \"155191\",\n        \"usd_balance\": \"163.59\"\n    }, {\n        \"height\": 899905,\n        \"confirmations\": 930,\n        \"unix_timestamp\": 1749126924,\n        \"timestamp\": \"2025-06-05 12:35:24\",\n        \"sat_balance\": \"155191\",\n        \"usd_balance\": \"163.56\"\n    }],\n    \"last_updated\": {\n        \"block_hash\": \"000000000000000000014ba9b2d30d9c737423c753c5b6a27989815ed50afe04\",\n        \"block_height\": 900834\n    },\n    \"next_cursor\": null\n}"
               }
             }
           },
@@ -1002,6 +1126,47 @@
         "deprecated": true
       }
     },
+    "/addresses/{address}/statistics": {
+      "get": {
+        "tags": [
+          "Addresses"
+        ],
+        "summary": "Address Statistics",
+        "description": "Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, current satoshi, control of any runes and inscription balance.",
+        "operationId": "address_statistics",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Bitcoin address or hex encoded script pubkey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "bc1qcx7ys0ahvtfqcc63sfn6axls0qrhkadnslpd94"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimestampedAddressStatistics"
+                },
+                "example": "{\n    \"data\": {\n        total_txs: 50,\n        total_utxos: 25,\n        runes: true,\n        total_inscriptions: 6100,\n        sat_balance: \"12345678\"\n    },\n    \"last_updated\": {\n        \"block_hash\": \"000000000000000000005075404edd6edc806976389a9f7e2ff71db1c2cf9b83\",\n        \"block_height\": 884991\n    }\n}"
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed query parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/addresses/{address}/txs": {
       "get": {
         "tags": [
@@ -1539,6 +1704,47 @@
         }
       }
     },
+    "/assets/collections/{collection_symbol}/stats": {
+      "get": {
+        "tags": [
+          "Inscriptions"
+        ],
+        "summary": "Collection Stats by Collection Symbol",
+        "description": "Provides stats for a given inscription: total volume (in sats), floor price (in sats), and total listed. This is useful for rendering collection summaries or for display in marketplaces and aggregators.",
+        "operationId": "collection_stats_by_collection_symbol",
+        "parameters": [
+          {
+            "name": "collection_symbol",
+            "in": "path",
+            "description": "Collection symbol (UTF-8)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "twick"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimestampedCollectionStatsBySymbol"
+                },
+                "example": "{\n    \"data\": {\n        \"totalVolume\": \"123456789\",\n        \"owners\": \"42\",\n        \"supply\": \"1000\",\n        \"floorPrice\": \"0.05\",\n        \"totalListed\": \"150\",\n        \"pendingTransactions\": \"3\",\n        \"inscriptionNumberMin\": \"100000\",\n        \"inscriptionNumberMax\": \"200000\",\n        \"symbol\": \"twick\"\n    },\n    \"last_updated\": {\n        \"block_hash\": \"00000000000000000001998e2059bcbb25f76fd0ef39db8ddfc5c31c5ea95f1f\",\n        \"block_height\": 876644\n    }\n}"
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed query parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/assets/inscriptions/{inscription_id}": {
       "get": {
         "tags": [
@@ -1675,7 +1881,7 @@
           "Inscriptions"
         ],
         "summary": "Collection Metadata by Inscription",
-        "description": "Returns a complete list of all inscription IDs associated with a specific collection, identified by its symbol. This endpoint is ideal for indexing collection contents or powering gallery views. Pagination support allows for handling large collections efficiently.",
+        "description": "Returns metadata of a collection for a given inscription ID, including its name, image, supply and external links.",
         "operationId": "collection_metadata_by_inscription",
         "parameters": [
           {
@@ -3087,6 +3293,50 @@
         }
       }
     },
+    "/mempool/transactions/{tx_hash}/metaprotocols": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Transaction Info with Metaprotocols (Mempool-aware)",
+        "description": "Returns an enhanced view of the transaction, including info about metaprotocols in both inputs and outputs. Useful for deep inspection tools.\n\nIn addition to confirmed transactions, mempool endpoints return data which reflects pending transactions in some number of \"estimated\" blocks - predicted blocks containing transactions which have been propagated around the network but not yet included in a mined block, with transactions with a higher sat/vB value being prioritised. The response details how many of these estimated blocks were considered when fetching the data.",
+        "operationId": "tx_info_with_metaprotocols1",
+        "parameters": [
+          {
+            "name": "tx_hash",
+            "in": "path",
+            "description": "Transaction hash",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "1b07f02356aed6ddca37db8226c6292f2953d55ea741d7f58d44427976e7d4ee"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MempoolTimestampedTxInfoMetaprotocols"
+                },
+                "example": "{\n    \"data\": {\n        \"height\": 900962,\n        \"volume\": \"3666788\",\n        \"fees\": \"508\",\n        \"sats_per_vb\": 2,\n        \"metaprotocols\": [\n          \"runes\"\n        ],\n        \"inputs\": [{\n            \"txid\": \"ed6273c6ff9259ec6a68dff0b21ddc4499e2e6d9837981f8c5089ac4935f6cf5\",\n            \"vout\": 0,\n            \"address\": \"bc1qyvtvxfyz60mmudgsmtxxpf22jl040ejmpj5mqnwv9lwr30jzmygqhr9tv8\",\n            \"script_pubkey\": \"00202316c32482d3f7be3510dacc60a54a97df57e65b0ca9b04dcc2fdc38be42d910\",\n            \"satoshis\": \"3666696\",\n            \"inscriptions\": [],\n            \"runes\": []\n          }, {\n            \"txid\": \"a115a1818805fa06a80eaa57287c0c3f57d5993c1f0d3f771523b4d11711d31f\",\n            \"vout\": 1,\n            \"address\": \"bc1pn2w92qyh7mwpf9rzmnvjnc0whswft243n0ntj50lurpnsjwwfy9sjur75v\",\n            \"script_pubkey\": \"51209a9c550097f6dc149462dcd929e1eebc1c95aab19be6b951ffe0c33849ce490b\",\n            \"satoshis\": \"600\",\n            \"inscriptions\": [],\n            \"runes\": []\n        }],\n        \"outputs\": [{\n            \"address\": null,\n            \"script_pubkey\": \"6a5d0b00c0a23303ffbedbb50201\",\n            \"satoshis\": \"0\",\n            \"spending_tx\": null,\n            \"inscriptions\": [],\n            \"runes\": []\n          }, {\n            \"address\": \"bc1pdruptufwh9awfepzq506kh03392lk074n4a5cy3v8zu0ma0sjvtqhwdu85\",\n            \"script_pubkey\": \"512068f815f12eb97ae4e422051fab5df18955fb3fd59d7b4c122c38b8fdf5f09316\",\n            \"satoshis\": \"546\",\n            \"spending_tx\": null,\n            \"inscriptions\": [],\n            \"runes\": []\n          }, {\n            \"address\": \"bc1qyvtvxfyz60mmudgsmtxxpf22jl040ejmpj5mqnwv9lwr30jzmygqhr9tv8\",\n            \"script_pubkey\": \"00202316c32482d3f7be3510dacc60a54a97df57e65b0ca9b04dcc2fdc38be42d910\",\n            \"satoshis\": \"3641305\",\n            \"spending_tx\": null,\n            \"inscriptions\": [],\n            \"runes\": []\n          }, {\n            \"address\": \"bc1qp8j9sx6609h7llqufurxjgrwsqwt020tqzn0gs\",\n            \"script_pubkey\": \"001409e4581b5a796feffc1c4f0669206e801cb7a9eb\",\n            \"satoshis\": \"580\",\n            \"spending_tx\": null,\n            \"inscriptions\": [],\n            \"runes\": []\n          }, {\n            \"address\": \"bc1qqx7h6wrl52hxwqnp8v8k072ahnr3sq8huzynww\",\n            \"script_pubkey\": \"001401bd7d387fa2ae6702613b0f67f95dbcc71800f7\",\n            \"satoshis\": \"24357\",\n            \"spending_tx\": null,\n            \"inscriptions\": [],\n            \"runes\": []\n        }]\n    },\n    \"indexer_info\": {\n    \"chain_tip\": {\n        \"block_hash\": \"0000000000000000000148c7dbf4f8721db8912485cc6860e5b22f9b62e09870\",\n        \"block_height\": 900961\n    },\n    \"mempool_timestamp\": \"2025-06-12 17:27:29\",\n    \"estimated_blocks\": [{\n        \"block_height\": 900962,\n        \"sats_per_vb\": {\n            \"min\": 2,\n            \"median\": 4,\n            \"max\": 101\n        }\n    }]\n}"
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed query parameters"
+          },
+          "404": {
+            "description": "Requested entity not found on-chain"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/mempool/transactions/{tx_hash}/outputs/{output_index}": {
       "get": {
         "tags": [
@@ -3148,7 +3398,7 @@
         ],
         "summary": "Satoshi Activity by Address",
         "description": "Returns all transactions for a given address or script pubkey, allowing insight into when the balance increased, decreased, or remained the same. This endpoint supports customization to narrow results by time, transaction type, or ordering, enabling tailored historical views.",
-        "operationId": "satoshi_activity_by_address1",
+        "operationId": "wallet_satoshi_activity_by_address",
         "parameters": [
           {
             "name": "address",
@@ -3282,7 +3532,7 @@
         ],
         "summary": "Metaprotocol Activity by Address",
         "description": "Return all transactions where the specified address has satoshi and/or metaprotocols activity. Supported metaprotocols: runes, inscriptions.",
-        "operationId": "metaprotocol_activity_by_address",
+        "operationId": "wallet_metaprotocol_activity_by_address",
         "parameters": [
           {
             "name": "address",
@@ -3385,6 +3635,129 @@
         }
       }
     },
+    "/wallet/addresses/{address}/balance/historical": {
+      "get": {
+        "tags": [
+          "Addresses"
+        ],
+        "summary": "Historical Satoshi Balance by Address",
+        "description": "Returns the historical satoshi balances, itemized by block and including USD price.",
+        "operationId": "wallet_historical_satoshi_balance_by_address",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Bitcoin address or hex encoded script pubkey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "tb1qphcdyah2e4vtpxn56hsz3p6kapg90pl4x525kc"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "The order in which the results are sorted. Supported values: asc, desc",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "type": "string",
+                  "default": "asc",
+                  "enum": [
+                    "asc",
+                    "desc"
+                  ]
+                }
+              ],
+              "nullable": true
+            }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "description": "The max number of results per page",
+            "required": false,
+            "schema": {
+              "allOf": [
+                {
+                  "type": "integer",
+                  "default": 100,
+                  "minimum": 0
+                }
+              ],
+              "nullable": true
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Return only blocks included on or after a specific height or timestamps. If this parameter is not provided, the starting point will be the first block where the address has seen its balance increase or decrease.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Return only blocks included on or before a specific height or timestamp",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Pagination cursor string, use the cursor included in a page of results to fetch the next page",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "height_params",
+            "in": "query",
+            "description": "Whether the from and to integer query params should be read as timestamps or as block heights. True (the default) means from and to params should be read as block heights.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedHistoricalSatBalanceByAddress1"
+                },
+                "example": "{\n    \"data\": [{\n        \"height\": 899903,\n        \"confirmations\": 932,\n        \"unix_timestamp\": 1749126863,\n        \"timestamp\": \"2025-06-05 12:34:23\",\n        \"sat_balance\": \"155191\",\n        \"usd_balance\": \"163.59\"\n    }, {\n        \"height\": 899904,\n        \"confirmations\": 931,\n        \"unix_timestamp\": 1749126892,\n        \"timestamp\": \"2025-06-05 12:34:52\",\n        \"sat_balance\": \"155191\",\n        \"usd_balance\": \"163.59\"\n    }, {\n        \"height\": 899905,\n        \"confirmations\": 930,\n        \"unix_timestamp\": 1749126924,\n        \"timestamp\": \"2025-06-05 12:35:24\",\n        \"sat_balance\": \"155191\",\n        \"usd_balance\": \"163.56\"\n    }],\n    \"last_updated\": {\n        \"block_hash\": \"000000000000000000014ba9b2d30d9c737423c753c5b6a27989815ed50afe04\",\n        \"block_height\": 900834\n    },\n    \"next_cursor\": null\n}"
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed query parameters"
+          },
+          "404": {
+            "description": "Requested entity not found on-chain"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/wallet/addresses/{address}/inscriptions/activity": {
       "get": {
         "tags": [
@@ -3392,7 +3765,7 @@
         ],
         "summary": "Inscription Activity by Address",
         "description": "Returns all inscription-related transactions involving a specific address. Can be filtered by activity type (send, receive, self-transfer), narrowed to a specific inscription, and sorted chronologically. Useful for building dashboards, tracking user behavior, or filtering unwanted spam activity.",
-        "operationId": "inscription_activity_by_address1",
+        "operationId": "wallet_inscription_activity_by_address",
         "parameters": [
           {
             "name": "address",
@@ -3537,7 +3910,7 @@
         ],
         "summary": "Rune Activity by Address",
         "description": "Return all transactions where the specified address has rune activity, with the option to filter by a specific rune kind.",
-        "operationId": "rune_activity_by_address1",
+        "operationId": "wallet_rune_activity_by_address",
         "parameters": [
           {
             "name": "address",
@@ -3675,9 +4048,51 @@
         }
       }
     },
+    "/wallet/addresses/{address}/statistics": {
+      "get": {
+        "tags": [
+          "Addresses"
+        ],
+        "summary": "Address Statistics",
+        "description": "Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, and current satoshi, rune and inscription balance.",
+        "operationId": "wallet_address_statistics",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Bitcoin address or hex encoded script pubkey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "bc1qcx7ys0ahvtfqcc63sfn6axls0qrhkadnslpd94"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimestampedAddressStatistics1"
+                },
+                "example": "{\n    \"data\": {\n        total_txs: 50,\n        total_utxos: 25,\n        runes: true,\n        total_inscriptions: 6100,\n        sat_balance: 12345678\n    },\n    \"last_updated\": {\n        \"block_hash\": \"000000000000000000005075404edd6edc806976389a9f7e2ff71db1c2cf9b83\",\n        \"block_height\": 884991\n    }\n}"
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed query parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/rpc/block/latest": {
       "get": {
         "description": "Returns the most recent block on the Bitcoin blockchain.\nUseful for syncing frontends, indexing latest chain state, or watching for new block activity. Set `verbose=true` for full TX data without need for separate calls.",
+        "operationId": "rpc_latest_block",
         "parameters": [
           {
             "description": "Page number for block transactions.",
@@ -3748,6 +4163,7 @@
     "/rpc/block/range/{start_height}/{end_height}": {
       "get": {
         "description": "Fetches basic info for a contiguous block range (start and end height).",
+        "operationId": "rpc_block_range_info",
         "parameters": [
           {
             "description": "Start height.",
@@ -3839,6 +4255,7 @@
     "/rpc/block/recent": {
       "get": {
         "description": "Returns the most recent blocks from the tip going backward. Useful to view or stream recent blockchain activity.",
+        "operationId": "rpc_recent_blocks_info",
         "parameters": [
           {
             "description": "Page number.",
@@ -3919,6 +4336,7 @@
     "/rpc/block/recent/{count}": {
       "get": {
         "description": "Returns a list of the most recently mined blocks, limited by count. It provides a snapshot of the latest blockchain activity, starting from the current chain tip and going backward.",
+        "operationId": "rpc_recent_blocks_info_count",
         "parameters": [
           {
             "description": "Number of blocks.",
@@ -3992,6 +4410,7 @@
     "/rpc/block/{height_or_hash}": {
       "get": {
         "description": "Retrieve full or summary information for a specific block.\nUseful for analyzing individual blocks or resolving TX data inline.",
+        "operationId": "rpc_block_info",
         "parameters": [
           {
             "description": "Block height or hash.",
@@ -4088,6 +4507,7 @@
     "/rpc/block/{height_or_hash}/miner": {
       "get": {
         "description": "Returns metadata about the miner for a specific block.\nIncludes name, known addresses, icon, and associated tags.\nUseful for research or visual analytics on pool distribution.",
+        "operationId": "rpc_block_miner_info",
         "parameters": [
           {
             "description": "Block height or hash.",
@@ -4130,6 +4550,7 @@
     "/rpc/block/{height_or_hash}/volume": {
       "get": {
         "description": "Returns total transaction output volume (in satoshis) for a block.\nThis provides insight into economic activity, not just block size.",
+        "operationId": "rpc_block_volume",
         "parameters": [
           {
             "description": "Block height or hash.",
@@ -4172,6 +4593,7 @@
     "/rpc/general/info": {
       "get": {
         "description": "Returns global node and chain info: block count, difficulty, pruning, fork status, etc.\nUseful for diagnostics, UI status panels, or infrastructure monitoring.",
+        "operationId": "rpc_chain_info",
         "responses": {
           "200": {
             "content": {
@@ -4213,6 +4635,7 @@
     "/rpc/mempool/info": {
       "get": {
         "description": "Returns size, memory usage, fee thresholds, and Replace-By-Fee (RBF) state.\nUseful for gauging current congestion and planning fees accordingly.",
+        "operationId": "rpc_mempool_info",
         "responses": {
           "200": {
             "content": {
@@ -4254,6 +4677,7 @@
     "/rpc/mempool/transactions": {
       "get": {
         "description": "Returns a list of transaction IDs currently in the mempool.",
+        "operationId": "rpc_mempool_transactions",
         "responses": {
           "200": {
             "content": {
@@ -4302,6 +4726,7 @@
     "/rpc/mempool/transactions/{tx_hash}": {
       "get": {
         "description": "Returns full information for a mempool transaction: fees, inputs, Replace-By-Fee (RBF) flags, unconfirmed descendants, etc.\nUseful for inspecting transactions or verifying status.",
+        "operationId": "rpc_mempool_transaction_details",
         "parameters": [
           {
             "description": "Transaction hash.",
@@ -4361,6 +4786,7 @@
     "/rpc/mempool/transactions/{tx_hash}/ancestors": {
       "get": {
         "description": "Lists ancestor TXs for a mempool TX, by a TX hash.\nUseful for evaluating chains of unconfirmed transactions and replacability via Replace-By-Fee (RBF).",
+        "operationId": "rpc_mempool_transaction_ancestors",
         "parameters": [
           {
             "description": "Transaction hash.",
@@ -4420,6 +4846,7 @@
     "/rpc/mempool/transactions/{tx_hash}/descendants": {
       "get": {
         "description": "Lists descendant TXs for a mempool TX, by a TX hash.\nUseful for evaluating chains of unconfirmed transactions and replacability via Replace-By-Fee (RBF).",
+        "operationId": "rpc_mempool_transaction_descendants",
         "parameters": [
           {
             "description": "Transaction hash.",
@@ -4479,6 +4906,7 @@
     "/rpc/transaction/batch": {
       "post": {
         "description": "Takes up to 50 TX hashes and returns verbose TX data in a single call. Useful for dashboards or syncing nodes without hitting rate limits.",
+        "operationId": "rpc_transaction_info_batch",
         "parameters": [
           {
             "description": "Verbose.",
@@ -4560,6 +4988,7 @@
     "/rpc/transaction/decode": {
       "post": {
         "description": "Takes a raw TX hex and returns structured JSON.\nUseful when building or validating raw transactions.",
+        "operationId": "rpc_transaction_decode",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4626,6 +5055,7 @@
     "/rpc/transaction/estimatefee/{blocks}": {
       "get": {
         "description": "Estimate approximate fee per kilobyte (kB) needed for a transaction.\nUseful for setting dynamic fee rates in wallets or broadcast tools.",
+        "operationId": "rpc_estimate_smart_fee",
         "parameters": [
           {
             "description": "Confirmation target in blocks.",
@@ -4709,6 +5139,7 @@
     "/rpc/transaction/hex": {
       "post": {
         "description": "Same as `/transaction/decode` in that it takes a raw TX hex and returns structured JSON, but it also fetches blockchain metadata such as confirmations and block height.",
+        "operationId": "rpc_transaction_info_hex",
         "parameters": [
           {
             "description": "Verbose.",
@@ -4787,6 +5218,7 @@
     "/rpc/transaction/psbt/decode": {
       "post": {
         "description": "Takes a signed PSBT hex and returns the internal structure. Covers UTXO metadata, BIP32 deriv paths, inputs/outputs, etc.\nUseful for hardware wallet or multisig integrations.",
+        "operationId": "rpc_psbt_decode",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4839,6 +5271,7 @@
     "/rpc/transaction/recent": {
       "get": {
         "description": "Returns a list of recent on-chain transactions.\nUseful for retrieving lastest transactions or monitoring new, on-chain activity by block height.",
+        "operationId": "rpc_transaction_recent",
         "parameters": [
           {
             "description": "Page number.",
@@ -4942,6 +5375,7 @@
     "/rpc/transaction/recent/{count}": {
       "get": {
         "description": "Returns a list of recent on-chain transactions, specified by count.\nUseful for retrieving lastest transactions or monitoring new, on-chain activity by block height.",
+        "operationId": "rpc_transaction_recent_count",
         "parameters": [
           {
             "description": "Number of transactions.",
@@ -5038,6 +5472,7 @@
     "/rpc/transaction/submit": {
       "post": {
         "description": "Pushes a signed raw transaction to the network.",
+        "operationId": "rpc_submit_transaction",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5104,6 +5539,7 @@
     "/rpc/transaction/{tx_hash}": {
       "get": {
         "description": "This endpoint returns detailed information for a specific Bitcoin transaction, by its unique transaction hash.",
+        "operationId": "rpc_transaction_info",
         "parameters": [
           {
             "description": "Transaction hash.",
@@ -5176,6 +5612,1165 @@
           "Transactions"
         ]
       }
+    },
+    "/eventmanager/healthcheck": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Healthcheck",
+        "description": "Healthcheck",
+        "operationId": "event_manager.v1.EventManagerService.Healthcheck",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.HealthcheckResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventmanager/managers": {
+      "get": {
+        "tags": [
+          "Managers"
+        ],
+        "summary": "ListManagers",
+        "description": "List all event managers\n\n Returns a list of all event managers associated with the API key. These represent configured webhook listeners for blockchain events.",
+        "operationId": "event_manager.v1.EventManagerService.ListManagers",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.ListManagersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Managers"
+        ],
+        "summary": "CreateManager",
+        "description": "Create a new event manager\n\n Creates a new event manager that defines a webhook URL and related triggers.",
+        "operationId": "event_manager.v1.EventManagerService.CreateManager",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/event_manager.v1.CreateManagerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.CreateManagerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventmanager/managers/{id}": {
+      "get": {
+        "tags": [
+          "Managers"
+        ],
+        "summary": "GetManager",
+        "description": "Fetch a specific event manager\n\n Retrieves the configuration of a specific manager identified by its unique `id`.",
+        "operationId": "event_manager.v1.EventManagerService.GetManager",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.GetManagerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Managers"
+        ],
+        "summary": "UpdateManager",
+        "description": "Update an existing event manager\n\n Updates an event manager’s metadata, webhook, or attached triggers identified by its unique `id`.",
+        "operationId": "event_manager.v1.EventManagerService.UpdateManager",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "eventManager": {
+                    "title": "event_manager",
+                    "$ref": "#/components/schemas/event_manager.v1.Manager"
+                  }
+                },
+                "title": "UpdateManagerRequest",
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.UpdateManagerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Managers"
+        ],
+        "summary": "DeleteManager",
+        "description": "Delete an event manager\n\n Removes the manager and all associated triggers identified by its unique `id`.",
+        "operationId": "event_manager.v1.EventManagerService.DeleteManager",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.DeleteManagerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventmanager/triggers": {
+      "get": {
+        "tags": [
+          "Triggers"
+        ],
+        "summary": "ListTriggers",
+        "description": "List all triggers\n\n Returns all individual triggers associated with your event managers.",
+        "operationId": "event_manager.v1.EventManagerService.ListTriggers",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.ListTriggersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Triggers"
+        ],
+        "summary": "CreateTrigger",
+        "description": "Create a new trigger\n\n Adds a trigger to a manager to listen for specific blockchain activity.",
+        "operationId": "event_manager.v1.EventManagerService.CreateTrigger",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/event_manager.v1.CreateTriggerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.CreateTriggerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventmanager/triggers/{id}": {
+      "get": {
+        "tags": [
+          "Triggers"
+        ],
+        "summary": "GetTrigger",
+        "description": "Fetch trigger details\n\n Returns metadata and configuration for a specific trigger identified by its unique `id`.",
+        "operationId": "event_manager.v1.EventManagerService.GetTrigger",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.GetTriggerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Triggers"
+        ],
+        "summary": "UpdateTrigger",
+        "description": "Update a trigger\n\n Allows modification of a trigger's properties identified by its unique `id`.",
+        "operationId": "event_manager.v1.EventManagerService.UpdateTrigger",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trigger": {
+                    "title": "trigger",
+                    "$ref": "#/components/schemas/event_manager.v1.Trigger"
+                  }
+                },
+                "title": "UpdateTriggerRequest",
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.UpdateTriggerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Triggers"
+        ],
+        "summary": "DeleteTrigger",
+        "description": "Remove a trigger\n\n Deletes a specific trigger identified by its unique `id`, leaving the event manager intact.",
+        "operationId": "event_manager.v1.EventManagerService.DeleteTrigger",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.DeleteTriggerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventmanager/logs/{id}": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "GetEventLog",
+        "description": "Fetch a single event log by ID\n\n Returns the payload, status, and response of a specific event log identified by its unique `id`.",
+        "operationId": "event_manager.v1.EventManagerService.GetEventLog",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.GetEventLogResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventmanager/logs": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "ListEventLogs",
+        "description": "Fetch all event logs\n\n Returns a list of event logs that have been generated from event manager triggers. Each log captures a payload, response status, and other metadata.",
+        "operationId": "event_manager.v1.EventManagerService.ListEventLogs",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.ListEventLogsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/eventmanager/picklist_options/{name}": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "GetPicklistOptions",
+        "description": "Fetch picklist options by name\n\n Returns a list of picklist options identified by its unique `name`.",
+        "operationId": "event_manager.v1.EventManagerService.GetPicklistOptions",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.GetPicklistOptionsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_internal/daily_credits": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "summary": "ListDailyComputeCredits",
+        "description": "Fetch daily compute credits\n \n Fetches the compute credits available (calculation for previous day).",
+        "operationId": "event_manager.v1.EventManagerService.ListDailyComputeCredits",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/event_manager.v1.ListDailyComputeCreditsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/event_manager.v1.ListDailyComputeCreditsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/connect.error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/markets/btc/prices/batch": {
+      "post": {
+        "description": "Returns BTC-USD prices for the provided list of UTC timestamps. Timestamps are matched against minute-aligned entries in the database.",
+        "operationId": "mkt-btc-prices-by-timestamps",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/bitcoin_api.PricesByTimestampsParams"
+              }
+            }
+          },
+          "description": "Array of UTC timestamps",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/models.BTCPrice"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "BTC prices by timestamp",
+        "tags": [
+          "DEX"
+        ]
+      }
+    },
+    "/markets/btc/prices/{timestamp}": {
+      "get": {
+        "description": "Returns BTC-USD price for the provided UTC timestamp.",
+        "operationId": "mkt-btc-price-by-timestamp",
+        "parameters": [
+          {
+            "description": "Unix timestamp in seconds",
+            "in": "path",
+            "name": "timestamp",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/models.BTCPrice"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/bitcoin_api.APIError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/bitcoin_api.APIError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Invalid timestamp"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "BTC price by timestamp",
+        "tags": [
+          "DEX"
+        ]
+      }
+    },
+    "/markets/dexs": {
+      "get": {
+        "description": "Retrieves a list of all decentralized exchanges (DEXs) currently indexed and supported by the API. This serves as the discovery endpoint for clients to programmatically identify valid DEX identifiers used in other endpoints like trades or OHLC queries.",
+        "operationId": "mkt-dexs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.SupportedDexList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Supported DEXs",
+        "tags": [
+          "DEX"
+        ]
+      }
+    },
+    "/markets/dexs/ohlc/{dex}/{symbol}": {
+      "get": {
+        "description": "Returns candlestick-formatted market data (Open, High, Low, Close, Volume) for a specific DEX and Rune pair, segmented by time intervals. This is ideal for price charting, trend analysis, and historical performance. Data is sourced from both confirmed blocks and optionally from the mempool, depending on configuration.",
+        "operationId": "mkt-dex-ohlc",
+        "parameters": [
+          {
+            "description": "Name of the DEX",
+            "example": "magiceden",
+            "in": "path",
+            "name": "dex",
+            "required": true,
+            "schema": {
+              "default": "magiceden",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Symbol of the Rune asset trading pair (BTC-Rune ID)",
+            "example": "BTC-840000:28",
+            "in": "path",
+            "name": "symbol",
+            "required": true,
+            "schema": {
+              "default": "BTC-840000:28",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Mempool mode",
+            "example": "included",
+            "in": "query",
+            "name": "mempool",
+            "schema": {
+              "default": "excluded",
+              "enum": [
+                "included",
+                "excluded",
+                "only"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Time resolution (1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M)",
+            "example": "1h",
+            "in": "query",
+            "name": "resolution",
+            "required": true,
+            "schema": {
+              "default": "1h",
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "1d",
+                "1w",
+                "1M"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start timestamp in Unix",
+            "example": "1735689600",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "default": "1735689600",
+              "type": "string"
+            }
+          },
+          {
+            "description": "End timestamp in Unix",
+            "example": "1742428800",
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "default": "1742428800",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Limit number of Runes returned (min: 1, max: 50000)",
+            "example": 10000,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 5000,
+              "maximum": 50000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sort by descending (desc) or ascending (asc)",
+            "example": "asc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "desc",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Fill candles with no trades with synthetic data (OHLC filled with previous closing price, volume=0)",
+            "example": false,
+            "in": "query",
+            "name": "carry",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.CandleList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Rune OHLC data",
+        "tags": [
+          "DEX"
+        ]
+      }
+    },
+    "/markets/dexs/trades/{dex}/{symbol}": {
+      "get": {
+        "description": "Provides a time-series list of individual trades for a specified Rune pair on a given DEX, including granular data such as trade price (in satoshis), volume, block height, and buy/sell direction. Especially useful for high-frequency strategies or price feed services.",
+        "operationId": "mkt-dex-trades",
+        "parameters": [
+          {
+            "description": "Name of the DEX",
+            "example": "magiceden",
+            "in": "path",
+            "name": "dex",
+            "required": true,
+            "schema": {
+              "default": "magiceden",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Symbol of the Rune asset trading pair (BTC-Rune ID)",
+            "example": "BTC-840000:28",
+            "in": "path",
+            "name": "symbol",
+            "required": true,
+            "schema": {
+              "default": "BTC-840000:28",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Mempool mode",
+            "example": "included",
+            "in": "query",
+            "name": "mempool",
+            "schema": {
+              "default": "excluded",
+              "enum": [
+                "included",
+                "excluded",
+                "only"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start timestamp in Unix",
+            "example": "1735689600",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "default": "1735689600",
+              "type": "string"
+            }
+          },
+          {
+            "description": "End timestamp in Unix",
+            "example": "1742428800",
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "default": "1742428800",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Limit number of Runes returned (min: 1, max: 50000)",
+            "example": 10000,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 5000,
+              "maximum": 50000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sort by descending (desc) or ascending (asc)",
+            "example": "desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "desc",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.TradeList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Rune Trades for DEX",
+        "tags": [
+          "DEX"
+        ]
+      }
+    },
+    "/markets/runes": {
+      "get": {
+        "description": "Returns metadata for Rune assets registered and etched into the Bitcoin blockchain. This includes human-readable name, symbol, divisibility (decimals), and genesis transaction. Filtering by `rune_id` narrows the query to a specific asset.",
+        "operationId": "mkt-dex",
+        "parameters": [
+          {
+            "description": "Bitcoin Rune ID",
+            "example": "840000:28",
+            "in": "query",
+            "name": "rune_id",
+            "schema": {
+              "default": "840000:28",
+              "maxLength": 16,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Limit number of Runes returned (min: 1, max: 50000)",
+            "example": 10000,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 5000,
+              "maximum": 50000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sort by descending (desc) or ascending (asc)",
+            "example": "desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "desc",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/models.RuneRegistryList"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/bitcoin_api.APIError"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        },
+        "summary": "Rune Registry",
+        "tags": [
+          "DEX"
+        ]
+      }
     }
   },
   "components": {
@@ -5237,6 +6832,44 @@
           "script_pubkey": {
             "type": "string",
             "description": "Script pubkey."
+          }
+        }
+      },
+      "AddressStatistics": {
+        "type": "object",
+        "required": [
+          "total_txs",
+          "total_utxos",
+          "runes",
+          "total_inscriptions",
+          "sat_balance"
+        ],
+        "properties": {
+          "runes": {
+            "type": "boolean",
+            "description": "Existence of runes controlled by the address."
+          },
+          "sat_balance": {
+            "type": "string",
+            "description": "Current satoshi balance controlled by the address."
+          },
+          "total_inscriptions": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of inscriptions currently controlled by the address.",
+            "minimum": 0
+          },
+          "total_txs": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of transactions where the address controlled at least an input or an output.",
+            "minimum": 0
+          },
+          "total_utxos": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of UTxOs (unspent outputs) controlled by the address.",
+            "minimum": 0
           }
         }
       },
@@ -5591,6 +7224,49 @@
           "script_pubkey": {
             "type": "string",
             "description": "Script pubkey at which the input containing the inscription resides."
+          }
+        }
+      },
+      "HistoricalSatBalanceByAddress": {
+        "type": "object",
+        "required": [
+          "height",
+          "confirmations",
+          "unix_timestamp",
+          "timestamp",
+          "sat_balance",
+          "usd_balance"
+        ],
+        "properties": {
+          "confirmations": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of confirmation blocks.",
+            "minimum": 0
+          },
+          "height": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Block height.",
+            "minimum": 0
+          },
+          "sat_balance": {
+            "type": "string",
+            "description": "Satoshi balance of the address at the end of this block."
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "The timestamp of the block, as claimed by the miner, in UTC format."
+          },
+          "unix_timestamp": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The timestamp of the block, as claimed by the miner, in UNIX format.",
+            "minimum": 0
+          },
+          "usd_balance": {
+            "type": "string",
+            "description": "USD balance if sat balance was exchanged. The exchange rate is that between USD and BTC at the time the block was mined."
           }
         }
       },
@@ -5973,6 +7649,49 @@
           }
         }
       },
+      "MagicEdenCollectionStats": {
+        "type": "object",
+        "required": [
+          "totalVolume",
+          "owners",
+          "supply",
+          "floorPrice",
+          "totalListed",
+          "pendingTransactions",
+          "inscriptionNumberMin",
+          "inscriptionNumberMax",
+          "symbol"
+        ],
+        "properties": {
+          "floorPrice": {
+            "type": "string"
+          },
+          "inscriptionNumberMax": {
+            "type": "string"
+          },
+          "inscriptionNumberMin": {
+            "type": "string"
+          },
+          "owners": {
+            "type": "string"
+          },
+          "pendingTransactions": {
+            "type": "string"
+          },
+          "supply": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "totalListed": {
+            "type": "string"
+          },
+          "totalVolume": {
+            "type": "string"
+          }
+        }
+      },
       "MagicEdenRuneTrades": {
         "type": "object",
         "required": [
@@ -6294,6 +8013,30 @@
           }
         }
       },
+      "MempoolLastUpdated": {
+        "type": "object",
+        "required": [
+          "chain_tip",
+          "estimated_blocks"
+        ],
+        "properties": {
+          "chain_tip": {
+            "$ref": "#/components/schemas/ChainTip"
+          },
+          "estimated_blocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstimatedBlock"
+            },
+            "description": "Information about any estimated blocks from the mempool that were indexed in addition to the mainchain"
+          },
+          "mempool_timestamp": {
+            "type": "string",
+            "description": "Timestamp of the indexed mempool snapshot, if any estimated blocks from the mempool have been indexed",
+            "nullable": true
+          }
+        }
+      },
       "Metaprotocol": {
         "type": "string",
         "enum": [
@@ -6414,6 +8157,28 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DeprecatedRuneUtxoByAddress"
+            }
+          },
+          "last_updated": {
+            "$ref": "#/components/schemas/ChainTip"
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PaginatedHistoricalSatBalanceByAddress": {
+        "type": "object",
+        "required": [
+          "data",
+          "last_updated"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoricalSatBalanceByAddress"
             }
           },
           "last_updated": {
@@ -7135,6 +8900,21 @@
           }
         }
       },
+      "TimestampedAddressStatistics": {
+        "type": "object",
+        "required": [
+          "data",
+          "last_updated"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AddressStatistics"
+          },
+          "last_updated": {
+            "$ref": "#/components/schemas/ChainTip"
+          }
+        }
+      },
       "TimestampedBlock": {
         "type": "object",
         "required": [
@@ -7207,6 +8987,21 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/MagicEdenCollection"
+          },
+          "last_updated": {
+            "$ref": "#/components/schemas/ChainTip"
+          }
+        }
+      },
+      "TimestampedCollectionStatsBySymbol": {
+        "type": "object",
+        "required": [
+          "data",
+          "last_updated"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MagicEdenCollectionStats"
           },
           "last_updated": {
             "$ref": "#/components/schemas/ChainTip"
@@ -8187,30 +9982,6 @@
           }
         }
       },
-      "MempoolLastUpdated": {
-        "type": "object",
-        "required": [
-          "chain_tip",
-          "estimated_blocks"
-        ],
-        "properties": {
-          "chain_tip": {
-            "$ref": "#/components/schemas/ChainTip"
-          },
-          "estimated_blocks": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EstimatedBlock"
-            },
-            "description": "Information about any estimated blocks from the mempool that were indexed in addition to the mainchain"
-          },
-          "mempool_timestamp": {
-            "type": "string",
-            "description": "Timestamp of the indexed mempool snapshot, if any estimated blocks from the mempool have been indexed",
-            "nullable": true
-          }
-        }
-      },
       "MempoolPaginatedRuneHolder": {
         "type": "object",
         "required": [
@@ -8328,6 +10099,21 @@
           }
         }
       },
+      "MempoolTimestampedTxInfoMetaprotocols": {
+        "type": "object",
+        "required": [
+          "data",
+          "indexer_info"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MempoolTxInfoMetaprotocols"
+          },
+          "indexer_info": {
+            "$ref": "#/components/schemas/MempoolLastUpdated"
+          }
+        }
+      },
       "MempoolTimestampedTxOutMetaprotocols": {
         "type": "object",
         "required": [
@@ -8340,6 +10126,65 @@
           },
           "indexer_info": {
             "$ref": "#/components/schemas/MempoolLastUpdated"
+          }
+        }
+      },
+      "MempoolTxInfoMetaprotocols": {
+        "type": "object",
+        "required": [
+          "height",
+          "volume",
+          "fees",
+          "sats_per_vb",
+          "metaprotocols",
+          "inputs",
+          "outputs"
+        ],
+        "properties": {
+          "fees": {
+            "type": "string",
+            "description": "Fees paid to the miner.",
+            "example": "2504"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Block height.",
+            "example": 875075,
+            "minimum": 0
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TxInMetaprotocols"
+            },
+            "description": "List of inputs, in the same order as the transaction."
+          },
+          "metaprotocols": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Metaprotocol"
+            },
+            "description": "Whether any of the transactions in the block involved metaprotocols."
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TxOutMetaprotocols"
+            },
+            "description": "List of outputs, in the same order as the transaction."
+          },
+          "sats_per_vb": {
+            "type": "integer",
+            "format": "int64",
+            "description": "sats per vB of the transaction.",
+            "example": 15,
+            "minimum": 0
+          },
+          "volume": {
+            "type": "string",
+            "description": "Total number of satoshis that went through this transaction, minus fees.",
+            "example": "12345678"
           }
         }
       },
@@ -8442,6 +10287,89 @@
           }
         }
       },
+      "AddressStatistics1": {
+        "type": "object",
+        "required": [
+          "total_txs",
+          "total_utxos",
+          "runes",
+          "total_inscriptions",
+          "sat_balance"
+        ],
+        "properties": {
+          "runes": {
+            "type": "boolean",
+            "description": "Existence of runes controlled by the address."
+          },
+          "sat_balance": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Current satoshi balance controlled by the address.",
+            "minimum": 0
+          },
+          "total_inscriptions": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of inscriptions currently controlled by the address.",
+            "minimum": 0
+          },
+          "total_txs": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of transactions where the address controlled at least an input or an output.",
+            "minimum": 0
+          },
+          "total_utxos": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of UTxOs (unspent outputs) controlled by the address.",
+            "minimum": 0
+          }
+        }
+      },
+      "HistoricalSatBalanceByAddress1": {
+        "type": "object",
+        "required": [
+          "height",
+          "confirmations",
+          "unix_timestamp",
+          "timestamp",
+          "sat_balance",
+          "usd_balance"
+        ],
+        "properties": {
+          "confirmations": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of confirmation blocks.",
+            "minimum": 0
+          },
+          "height": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Block height.",
+            "minimum": 0
+          },
+          "sat_balance": {
+            "type": "string",
+            "description": "Satoshi balance of the address at the end of this block."
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "The timestamp of the block, as claimed by the miner, in UTC format."
+          },
+          "unix_timestamp": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The timestamp of the block, as claimed by the miner, in UNIX format.",
+            "minimum": 0
+          },
+          "usd_balance": {
+            "type": "string",
+            "description": "USD balance when exchanging satoshis at the exchange rate between USD and BTC during the mining of the block."
+          }
+        }
+      },
       "PaginatedActivityByAddressWithMetaprotocols": {
         "type": "object",
         "required": [
@@ -8461,6 +10389,43 @@
           "next_cursor": {
             "type": "string",
             "nullable": true
+          }
+        }
+      },
+      "PaginatedHistoricalSatBalanceByAddress1": {
+        "type": "object",
+        "required": [
+          "data",
+          "last_updated"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoricalSatBalanceByAddress1"
+            }
+          },
+          "last_updated": {
+            "$ref": "#/components/schemas/ChainTip"
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "TimestampedAddressStatistics1": {
+        "type": "object",
+        "required": [
+          "data",
+          "last_updated"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AddressStatistics1"
+          },
+          "last_updated": {
+            "$ref": "#/components/schemas/ChainTip"
           }
         }
       },
@@ -9709,6 +11674,894 @@
           },
           "value": {
             "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "event_manager.v1.Chain": {
+        "type": "string",
+        "title": "Chain",
+        "enum": [
+          "CHAIN_UNSPECIFIED",
+          "CHAIN_BITCOIN"
+        ]
+      },
+      "event_manager.v1.Network": {
+        "type": "string",
+        "title": "Network",
+        "enum": [
+          "NETWORK_UNSPECIFIED",
+          "NETWORK_MAINNET",
+          "NETWORK_TESTNET"
+        ]
+      },
+      "event_manager.v1.TriggerType": {
+        "type": "string",
+        "title": "TriggerType",
+        "enum": [
+          "TRIGGER_TYPE_UNSPECIFIED",
+          "TRIGGER_TYPE_TRANSACTION",
+          "TRIGGER_TYPE_SENDER",
+          "TRIGGER_TYPE_RECEIVER",
+          "TRIGGER_TYPE_SENDER_OR_RECEIVER"
+        ]
+      },
+      "event_manager.v1.CreateManagerRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "name"
+          },
+          "chain": {
+            "title": "chain",
+            "$ref": "#/components/schemas/event_manager.v1.Chain"
+          },
+          "network": {
+            "title": "network",
+            "$ref": "#/components/schemas/event_manager.v1.Network"
+          },
+          "webhookUrl": {
+            "type": "string",
+            "title": "webhook_url"
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.CreateTriggerRequest"
+            },
+            "title": "triggers"
+          }
+        },
+        "title": "CreateManagerRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.CreateManagerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "title": "data",
+            "$ref": "#/components/schemas/event_manager.v1.Manager"
+          }
+        },
+        "title": "CreateManagerResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.CreateTriggerRequest": {
+        "type": "object",
+        "properties": {
+          "eventManagerId": {
+            "type": "string",
+            "title": "event_manager_id"
+          },
+          "triggerType": {
+            "title": "trigger_type",
+            "$ref": "#/components/schemas/event_manager.v1.TriggerType"
+          },
+          "trackedId": {
+            "type": "string",
+            "title": "tracked_id"
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.Filter"
+            },
+            "title": "filters"
+          }
+        },
+        "title": "CreateTriggerRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.CreateTriggerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "title": "data",
+            "$ref": "#/components/schemas/event_manager.v1.Trigger"
+          }
+        },
+        "title": "CreateTriggerResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.DeleteManagerRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          }
+        },
+        "title": "DeleteManagerRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.DeleteManagerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "title": "data",
+            "$ref": "#/components/schemas/event_manager.v1.Manager"
+          }
+        },
+        "title": "DeleteManagerResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.DeleteTriggerRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          }
+        },
+        "title": "DeleteTriggerRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.DeleteTriggerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "title": "data",
+            "$ref": "#/components/schemas/event_manager.v1.Trigger"
+          }
+        },
+        "title": "DeleteTriggerResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.EventLog": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          },
+          "eventManagerId": {
+            "type": "string",
+            "title": "event_manager_id"
+          },
+          "triggerId": {
+            "type": "string",
+            "title": "trigger_id"
+          },
+          "payload": {
+            "type": "string",
+            "title": "payload"
+          },
+          "responseStatus": {
+            "type": "string",
+            "title": "response_status"
+          },
+          "status": {
+            "type": "string",
+            "title": "status"
+          }
+        },
+        "title": "EventLog",
+        "additionalProperties": false
+      },
+      "event_manager.v1.Filter": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "key"
+          },
+          "operator": {
+            "type": "string",
+            "title": "operator"
+          },
+          "value": {
+            "type": "string",
+            "title": "value"
+          }
+        },
+        "title": "Filter",
+        "additionalProperties": false
+      },
+      "event_manager.v1.GetEventLogRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          }
+        },
+        "title": "GetEventLogRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.GetEventLogResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "title": "data",
+            "$ref": "#/components/schemas/event_manager.v1.EventLog"
+          }
+        },
+        "title": "GetEventLogResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.GetManagerRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          }
+        },
+        "title": "GetManagerRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.GetManagerResponse": {
+        "type": "object",
+        "properties": {
+          "eventManager": {
+            "title": "event_manager",
+            "$ref": "#/components/schemas/event_manager.v1.Manager"
+          }
+        },
+        "title": "GetManagerResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.GetPicklistOptionsRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "name"
+          }
+        },
+        "title": "GetPicklistOptionsRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.GetPicklistOptionsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.PicklistOption"
+            },
+            "title": "data"
+          }
+        },
+        "title": "GetPicklistOptionsResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.GetTriggerRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          }
+        },
+        "title": "GetTriggerRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.GetTriggerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "title": "data",
+            "$ref": "#/components/schemas/event_manager.v1.Trigger"
+          }
+        },
+        "title": "GetTriggerResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.HealthcheckRequest": {
+        "type": "object",
+        "title": "HealthcheckRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.HealthcheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "status"
+          }
+        },
+        "title": "HealthcheckResponse",
+        "additionalProperties": false,
+        "description": "Healthcheck message"
+      },
+      "event_manager.v1.ListDailyComputeCreditsRequest": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "title": "ids"
+          },
+          "date": {
+            "title": "date",
+            "$ref": "#/components/schemas/google.protobuf.Timestamp"
+          }
+        },
+        "title": "ListDailyComputeCreditsRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.ListDailyComputeCreditsResponse": {
+        "type": "object",
+        "properties": {
+          "counts": {
+            "type": "object",
+            "title": "counts",
+            "additionalProperties": {
+              "type": [
+                "integer",
+                "string"
+              ],
+              "title": "value",
+              "format": "int64"
+            }
+          }
+        },
+        "title": "ListDailyComputeCreditsResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.ListDailyComputeCreditsResponse.CountsEntry": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "key"
+          },
+          "value": {
+            "type": [
+              "integer",
+              "string"
+            ],
+            "title": "value",
+            "format": "int64"
+          }
+        },
+        "title": "CountsEntry",
+        "additionalProperties": false
+      },
+      "event_manager.v1.ListEventLogsRequest": {
+        "type": "object",
+        "title": "ListEventLogsRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.ListEventLogsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.EventLog"
+            },
+            "title": "data"
+          }
+        },
+        "title": "ListEventLogsResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.ListManagersRequest": {
+        "type": "object",
+        "title": "ListManagersRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.ListManagersResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.Manager"
+            },
+            "title": "data"
+          }
+        },
+        "title": "ListManagersResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.ListTriggersRequest": {
+        "type": "object",
+        "title": "ListTriggersRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.ListTriggersResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.Trigger"
+            },
+            "title": "data"
+          }
+        },
+        "title": "ListTriggersResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.Manager": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          },
+          "name": {
+            "type": "string",
+            "title": "name"
+          },
+          "chain": {
+            "title": "chain",
+            "$ref": "#/components/schemas/event_manager.v1.Chain"
+          },
+          "network": {
+            "title": "network",
+            "$ref": "#/components/schemas/event_manager.v1.Network"
+          },
+          "webhookUrl": {
+            "type": "string",
+            "title": "webhook_url"
+          },
+          "status": {
+            "type": "string",
+            "title": "status"
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.Trigger"
+            },
+            "title": "triggers"
+          }
+        },
+        "title": "Manager",
+        "additionalProperties": false
+      },
+      "event_manager.v1.PicklistOption": {
+        "type": "object",
+        "properties": {
+          "listName": {
+            "type": "string",
+            "title": "list_name"
+          },
+          "nestedListName": {
+            "type": "string",
+            "title": "nested_list_name"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.PicklistOption"
+            },
+            "title": "options"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "display_name"
+          },
+          "value": {
+            "type": "string",
+            "title": "value"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "title": "sort_order",
+            "format": "int32"
+          }
+        },
+        "title": "PicklistOption",
+        "additionalProperties": false
+      },
+      "event_manager.v1.Trigger": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          },
+          "eventManagerId": {
+            "type": "string",
+            "title": "event_manager_id"
+          },
+          "triggerType": {
+            "title": "trigger_type",
+            "$ref": "#/components/schemas/event_manager.v1.TriggerType"
+          },
+          "trackedId": {
+            "type": "string",
+            "title": "tracked_id"
+          },
+          "filters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/event_manager.v1.Filter"
+            },
+            "title": "filters"
+          }
+        },
+        "title": "Trigger",
+        "additionalProperties": false
+      },
+      "event_manager.v1.UpdateManagerRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          },
+          "eventManager": {
+            "title": "event_manager",
+            "$ref": "#/components/schemas/event_manager.v1.Manager"
+          }
+        },
+        "title": "UpdateManagerRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.UpdateManagerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "title": "data",
+            "$ref": "#/components/schemas/event_manager.v1.Manager"
+          }
+        },
+        "title": "UpdateManagerResponse",
+        "additionalProperties": false
+      },
+      "event_manager.v1.UpdateTriggerRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "id"
+          },
+          "trigger": {
+            "title": "trigger",
+            "$ref": "#/components/schemas/event_manager.v1.Trigger"
+          }
+        },
+        "title": "UpdateTriggerRequest",
+        "additionalProperties": false
+      },
+      "event_manager.v1.UpdateTriggerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "title": "data",
+            "$ref": "#/components/schemas/event_manager.v1.Trigger"
+          }
+        },
+        "title": "UpdateTriggerResponse",
+        "additionalProperties": false
+      },
+      "google.protobuf.Timestamp": {
+        "type": "string",
+        "examples": [
+          "1s",
+          "1.000340012s"
+        ],
+        "format": "date-time",
+        "description": "A Timestamp represents a point in time independent of any time zone or local\n calendar, encoded as a count of seconds and fractions of seconds at\n nanosecond resolution. The count is relative to an epoch at UTC midnight on\n January 1, 1970, in the proleptic Gregorian calendar which extends the\n Gregorian calendar backwards to year one.\n\n All minutes are 60 seconds long. Leap seconds are \"smeared\" so that no leap\n second table is needed for interpretation, using a [24-hour linear\n smear](https://developers.google.com/time/smear).\n\n The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By\n restricting to that range, we ensure that we can convert to and from [RFC\n 3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.\n\n # Examples\n\n Example 1: Compute Timestamp from POSIX `time()`.\n\n     Timestamp timestamp;\n     timestamp.set_seconds(time(NULL));\n     timestamp.set_nanos(0);\n\n Example 2: Compute Timestamp from POSIX `gettimeofday()`.\n\n     struct timeval tv;\n     gettimeofday(&tv, NULL);\n\n     Timestamp timestamp;\n     timestamp.set_seconds(tv.tv_sec);\n     timestamp.set_nanos(tv.tv_usec * 1000);\n\n Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.\n\n     FILETIME ft;\n     GetSystemTimeAsFileTime(&ft);\n     UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;\n\n     // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z\n     // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.\n     Timestamp timestamp;\n     timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));\n     timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));\n\n Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.\n\n     long millis = System.currentTimeMillis();\n\n     Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)\n         .setNanos((int) ((millis % 1000) * 1000000)).build();\n\n Example 5: Compute Timestamp from Java `Instant.now()`.\n\n     Instant now = Instant.now();\n\n     Timestamp timestamp =\n         Timestamp.newBuilder().setSeconds(now.getEpochSecond())\n             .setNanos(now.getNano()).build();\n\n Example 6: Compute Timestamp from current time in Python.\n\n     timestamp = Timestamp()\n     timestamp.GetCurrentTime()\n\n # JSON Mapping\n\n In JSON format, the Timestamp type is encoded as a string in the\n [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the\n format is \"{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z\"\n where {year} is always expressed using four digits while {month}, {day},\n {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional\n seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),\n are optional. The \"Z\" suffix indicates the timezone (\"UTC\"); the timezone\n is required. A proto3 JSON serializer should always use UTC (as indicated by\n \"Z\") when printing the Timestamp type and a proto3 JSON parser should be\n able to accept both UTC and other timezones (as indicated by an offset).\n\n For example, \"2017-01-15T01:30:15.01Z\" encodes 15.01 seconds past\n 01:30 UTC on January 15, 2017.\n\n In JavaScript, one can convert a Date object to this format using the\n standard\n [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)\n method. In Python, a standard `datetime.datetime` object can be converted\n to this format using\n [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with\n the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use\n the Joda Time's [`ISODateTimeFormat.dateTime()`](\n http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()\n ) to obtain a formatter capable of generating timestamps in this format."
+      },
+      "connect-protocol-version": {
+        "type": "number",
+        "title": "Connect-Protocol-Version",
+        "enum": [
+          1
+        ],
+        "description": "Define the version of the Connect protocol",
+        "const": 1
+      },
+      "connect-timeout-header": {
+        "type": "number",
+        "title": "Connect-Timeout-Ms",
+        "description": "Define the timeout, in ms"
+      },
+      "connect.error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "examples": [
+              "not_found"
+            ],
+            "enum": [
+              "canceled",
+              "unknown",
+              "invalid_argument",
+              "deadline_exceeded",
+              "not_found",
+              "already_exists",
+              "permission_denied",
+              "resource_exhausted",
+              "failed_precondition",
+              "aborted",
+              "out_of_range",
+              "unimplemented",
+              "internal",
+              "unavailable",
+              "data_loss",
+              "unauthenticated"
+            ],
+            "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code]."
+          },
+          "message": {
+            "type": "string",
+            "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client."
+          },
+          "detail": {
+            "$ref": "#/components/schemas/google.protobuf.Any"
+          }
+        },
+        "title": "Connect Error",
+        "additionalProperties": true,
+        "description": "Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation"
+      },
+      "google.protobuf.Any": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string",
+            "format": "binary"
+          },
+          "debug": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true,
+        "description": "Contains an arbitrary serialized message along with a @type that describes the type of the serialized message."
+      },
+      "bitcoin_api.APIError": {
+        "properties": {
+          "error": {
+            "description": "Error returned from the API request",
+            "example": "Bad Request",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "bitcoin_api.PricesByTimestampsParams": {
+        "properties": {
+          "timestamps": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
+        "required": [
+          "timestamps"
+        ],
+        "type": "object"
+      },
+      "models.BTCPrice": {
+        "properties": {
+          "price": {
+            "type": "number"
+          },
+          "timestamp": {
+            "$ref": "#/components/schemas/models.CustomTime"
+          }
+        },
+        "type": "object"
+      },
+      "models.Candle": {
+        "properties": {
+          "bucket": {
+            "description": "Start time of the candle interval",
+            "example": "2024-03-25T14:00:00Z",
+            "type": "string"
+          },
+          "close": {
+            "description": "Price at the end of the interval (in satoshis)",
+            "example": 19.75,
+            "type": "number"
+          },
+          "high": {
+            "description": "Highest price during the interval (in satoshis)",
+            "example": 20,
+            "type": "number"
+          },
+          "low": {
+            "description": "Lowest price during the interval (in satoshis)",
+            "example": 19.25,
+            "type": "number"
+          },
+          "open": {
+            "description": "Price at the start of the interval (in satoshis)",
+            "example": 19.5,
+            "type": "number"
+          },
+          "symbol": {
+            "description": "Symbol of the Rune asset trading pair (BTC-Rune ID)",
+            "example": "BTC-840000:28",
+            "type": "string"
+          },
+          "volume": {
+            "description": "Total traded amount during the interval. Volume=0 for backfilled, synthetic candles (queried with carry=true)",
+            "example": 3780,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "models.CandleList": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/models.Candle"
+            },
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
+        "type": "object"
+      },
+      "models.CustomTime": {
+        "properties": {
+          "time.Time": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "models.RuneRegistry": {
+        "properties": {
+          "divisibility": {
+            "description": "Number of decimal places supported",
+            "example": 8,
+            "type": "integer"
+          },
+          "etched_tx_hash": {
+            "description": "Transaction hash where the Rune was etched",
+            "example": "2bebfc71ac93f02de19b28a8b438ed40413676f4c4c2609401a9a08ea508fd58",
+            "type": "string"
+          },
+          "name": {
+            "description": "Human-readable name of the Rune",
+            "example": "DOGGOTOTHEMOON",
+            "type": "string"
+          },
+          "rune_id": {
+            "description": "Symbol of the Rune asset trading pair (BTC-Rune ID)",
+            "example": "BTC-840000:28",
+            "type": "string"
+          },
+          "spacer": {
+            "description": "Spacer value associated with the Rune",
+            "example": 0,
+            "type": "integer"
+          },
+          "symbol": {
+            "description": "Ticker symbol of the Rune",
+            "example": "DOGGO",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "models.RuneRegistryList": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/models.RuneRegistry"
+            },
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
+        "type": "object"
+      },
+      "models.SupportedDexList": {
+        "properties": {
+          "data": {
+            "example": [
+              "magiceden"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
+        "type": "object"
+      },
+      "models.Trade": {
+        "properties": {
+          "amount": {
+            "description": "Amount of the asset traded",
+            "example": 3780,
+            "type": "number"
+          },
+          "block": {
+            "description": "Block height where the trade was included",
+            "example": 840000,
+            "type": "integer"
+          },
+          "dex": {
+            "description": "Name of the DEX",
+            "example": "magiceden",
+            "type": "string"
+          },
+          "mempool": {
+            "description": "Mempool status of the trade",
+            "example": false,
+            "type": "boolean"
+          },
+          "price": {
+            "description": "Price of the asset (in satoshis)",
+            "example": 19.75,
+            "type": "number"
+          },
+          "side": {
+            "description": "Trade direction: buy or sell",
+            "enum": [
+              "buy",
+              "sell"
+            ],
+            "example": "buy",
+            "type": "string"
+          },
+          "symbol": {
+            "description": "Symbol of the Rune asset trading pair (BTC-Rune ID)",
+            "example": "BTC-840000:28",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "Time of the block in which trade occurred",
+            "example": "2024-05-03T15:04:05Z",
+            "type": "string"
+          },
+          "tx_hash": {
+            "description": "Transaction hash of the trade",
+            "example": "2bebfc71ac93f02de19b28a8b438ed40413676f4c4c2609401a9a08ea508fd58",
+            "type": "string"
+          },
+          "tx_index": {
+            "description": "Index of the trade within the block, 0-based (first trade is 0, second trade is 1, not transaction index)",
+            "example": 1,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "models.TradeList": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/models.Trade"
+            },
+            "type": "array",
+            "uniqueItems": false
           }
         },
         "type": "object"

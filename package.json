@@ -1,7 +1,7 @@
 {
-  "name": "bitcoin---blockchain-indexer-api",
-  "version": "v0.2.0",
-  "description": "MCP Server generated from OpenAPI spec for bitcoin---blockchain-indexer-api",
+  "name": "bitcoin---merged-services-api",
+  "version": "1.0.0",
+  "description": "MCP Server generated from OpenAPI spec for bitcoin---merged-services-api",
   "private": true,
   "type": "module",
   "main": "build/index.js",

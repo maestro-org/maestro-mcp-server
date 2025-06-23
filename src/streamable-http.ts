@@ -24,9 +24,11 @@ class MCPStreamableHttpServer {
   server: Server;
   // Store active transports by session ID
   transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
+  bearerAuth: string;
 
   constructor(server: Server) {
     this.server = server;
+    this.bearerAuth = '';
   }
 
   /**
@@ -57,6 +59,13 @@ class MCPStreamableHttpServer {
       // Reuse existing transport if we have a session ID
       if (sessionId && this.transports[sessionId]) {
         const transport = this.transports[sessionId];
+
+        /* MAESTRO OVERRIDE */
+        const authHeader = c.req.header('authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          this.bearerAuth = authHeader.slice(7);
+        }
+        /* MAESTRO OVERRIDE */
 
         // Handle the request with the transport
         await transport.handleRequest(req, res, body);
@@ -148,7 +157,19 @@ class MCPStreamableHttpServer {
 
     return isInitial(body);
   }
+
+  /**
+   * Public helper to get the last Bearer Authorization token
+   */
+  public getBearerAuth(): string {
+    return this.bearerAuth;
+  }
 }
+
+/* MAESTRO OVERRIDE */
+// Create MCP handler as a global variable
+let mcpHandler: MCPStreamableHttpServer;
+/* MAESTRO OVERRIDE */
 
 /**
  * Sets up a web server for the MCP server using StreamableHTTP transport
@@ -164,8 +185,8 @@ export async function setupStreamableHttpServer(server: Server, port = 3000) {
   // Enable CORS
   app.use('*', cors());
 
-  // Create MCP handler
-  const mcpHandler = new MCPStreamableHttpServer(server);
+  // Initialize global MCP handler
+  mcpHandler = new MCPStreamableHttpServer(server);
 
   // Add a simple health check endpoint
   app.get('/health', (c) => {
@@ -258,3 +279,8 @@ export async function setupStreamableHttpServer(server: Server, port = 3000) {
 
   return app;
 }
+
+/* MAESTRO OVERRIDE */
+// Export mcpHandler for external use
+export { mcpHandler };
+/* MAESTRO OVERRIDE */
