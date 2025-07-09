@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/maestro-org/maestro-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/maestro-org/maestro-mcp-server/actions/workflows/ci.yml)
 
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=maestro-mcp-server&config=JTdCJTIyY29tbWFuZCUyMiUzQSUyMm5weCUyMC15JTIwbWNwLXJlbW90ZSUyMGh0dHBzJTNBJTJGJTJGeGJ0LW1haW5uZXQuZ29tYWVzdHJvLWFwaS5vcmclMkZ2MCUyRm1jcCUyMC0taGVhZGVyJTIwQXV0aG9yaXphdGlvbiUzQSUyNCU3QkFVVEhfSEVBREVSJTdEJTIwLS10cmFuc3BvcnQlMjBodHRwLW9ubHklMjIlMkMlMjJlbnYlMjIlM0ElN0IlMjJBVVRIX0hFQURFUiUyMiUzQSUyMkJlYXJlciUyMCUzQ01BRVNUUk9fQVBJX0tFWSUzRSUyMiU3RCU3RA%3D%3D)
+
 A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maestro API platform. Provides tools for exploring blocks, transactions, addresses, and more on the Bitcoin blockchain.
 
 ---
