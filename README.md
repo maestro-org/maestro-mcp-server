@@ -64,7 +64,7 @@ npm run start:http
 
 ## API Reference & Examples
 
-- [Maestro API Postman Workspace](https://www.postman.com/go-maestro/maestro-api/overview)
+- [Maestro API Documentation](https://docs.gomaestro.org)
 - [Client Usage Examples](https://github.com/maestro-org/maestro-mcp-client-examples)
 
 ---
