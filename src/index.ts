@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * MCP Server generated from OpenAPI spec for bitcoin---merged-services-api v1.0.0
- * Generated on: 2025-06-22T15:25:43.624Z
+ * Generated on: 2025-09-16T21:52:06.347Z
  */
 
 // Load environment variables from .env file
@@ -49,9 +49,9 @@ interface McpToolDefinition {
 /**
  * Server configuration
  */
-export const SERVER_NAME = 'Maestro Bitcoin API';
-export const SERVER_VERSION = 'v0.2.0';
-export const API_BASE_URL = process.env.API_BASE_URL || 'https://xbt-mainnet.gomaestro-api.org/v0';
+export const SERVER_NAME = 'bitcoin---merged-services-api';
+export const SERVER_VERSION = '1.0.0';
+export const API_BASE_URL = 'https://xbt-mainnet.gomaestro-api.org/v0';
 
 /**
  * MCP Server instance
@@ -696,6 +696,11 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
             description:
               'Exclude UTxOs involved in metaprotocols (currently only runes and inscriptions will be discovered, more metaprotocols may be supported in future)',
           },
+          ignore_used_brc20: {
+            type: ['boolean', 'null'],
+            description:
+              'When used with exclude_metaprotocols=true, still include UTXOs which only contain used BRC20 inscriptions',
+          },
           count: {
             allOf: [{ type: 'integer', default: 100, minimum: 0 }],
             type: 'null',
@@ -734,6 +739,7 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
         { name: 'filter_dust', in: 'query' },
         { name: 'filter_dust_threshold', in: 'query' },
         { name: 'exclude_metaprotocols', in: 'query' },
+        { name: 'ignore_used_brc20', in: 'query' },
         { name: 'count', in: 'query' },
         { name: 'order', in: 'query' },
         { name: 'from', in: 'query' },
@@ -1235,12 +1241,20 @@ A preview of the content body is given only if its type is \`"text/plain"\`. For
         type: 'object',
         properties: {
           height_or_hash: { type: 'string', description: 'Block height or block hash' },
+          from_timestamp: {
+            type: ['boolean', 'null'],
+            description:
+              'Whether numeric path param should be taken as timestamp instead of block height. Default: false.',
+          },
         },
         required: ['height_or_hash'],
       },
       method: 'get',
       pathTemplate: '/blocks/{height_or_hash}',
-      executionParameters: [{ name: 'height_or_hash', in: 'path' }],
+      executionParameters: [
+        { name: 'height_or_hash', in: 'path' },
+        { name: 'from_timestamp', in: 'query' },
+      ],
       requestBodyContentType: undefined,
       securityRequirements: [{ 'api-key': [] }],
     },
@@ -1332,7 +1346,7 @@ A preview of the content body is given only if its type is \`"text/plain"\`. For
     'inscription_activity_by_tx',
     {
       name: 'inscription_activity_by_tx',
-      description: `List of all inscription activity in the transaction, including their satoshi-level positioning within transactions, ordered by transaction output index.`,
+      description: `List of all inscription activity in the transaction, including their satoshi-level positioning within transactions, ordered by transaction output index. The list of inscriptions is truncated to a maximum of 10,000 inscriptions.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -1547,6 +1561,11 @@ In addition to confirmed transactions, mempool endpoints return data which refle
             description:
               'Exclude UTxOs involved in metaprotocols (currently only runes and inscriptions will be discovered, more metaprotocols may be supported in future)',
           },
+          ignore_used_brc20: {
+            type: ['boolean', 'null'],
+            description:
+              'When used with exclude_metaprotocols=true, still include UTXOs which only contain used BRC20 inscriptions',
+          },
           count: {
             allOf: [{ type: 'integer', default: 100, minimum: 0 }],
             type: 'null',
@@ -1592,6 +1611,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
         { name: 'filter_dust', in: 'query' },
         { name: 'filter_dust_threshold', in: 'query' },
         { name: 'exclude_metaprotocols', in: 'query' },
+        { name: 'ignore_used_brc20', in: 'query' },
         { name: 'count', in: 'query' },
         { name: 'order', in: 'query' },
         { name: 'from', in: 'query' },
@@ -1703,7 +1723,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     'wallet_satoshi_activity_by_address',
     {
       name: 'wallet_satoshi_activity_by_address',
-      description: `Returns all transactions for a given address or script pubkey, allowing insight into when the balance increased, decreased, or remained the same. This endpoint supports customization to narrow results by time, transaction type, or ordering, enabling tailored historical views.`,
+      description: `Returns all transactions for a given address or script pubkey, allowing insight into when the balance increased, decreased, or remained the same. Mempool data is included by default. This endpoint supports customization to narrow results by time, transaction type, or ordering, enabling tailored historical views.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -1746,6 +1766,10 @@ In addition to confirmed transactions, mempool endpoints return data which refle
             description:
               'Do not return self-transfer transactions - transactions in which satoshi balance did not increase or decrease.',
           },
+          mempool: {
+            type: ['boolean', 'null'],
+            description: 'Include mempool data. Default: true.',
+          },
         },
         required: ['address'],
       },
@@ -1760,6 +1784,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
         { name: 'cursor', in: 'query' },
         { name: 'activity_kind', in: 'query' },
         { name: 'exclude_self_transfers', in: 'query' },
+        { name: 'mempool', in: 'query' },
       ],
       requestBodyContentType: undefined,
       securityRequirements: [{ 'api-key': [] }],
@@ -1801,6 +1826,10 @@ In addition to confirmed transactions, mempool endpoints return data which refle
             description:
               'Pagination cursor string, use the cursor included in a page of results to fetch the next page',
           },
+          mempool: {
+            type: ['boolean', 'null'],
+            description: 'Include mempool data. Default: true.',
+          },
         },
         required: ['address'],
       },
@@ -1813,6 +1842,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
         { name: 'from', in: 'query' },
         { name: 'to', in: 'query' },
         { name: 'cursor', in: 'query' },
+        { name: 'mempool', in: 'query' },
       ],
       requestBodyContentType: undefined,
       securityRequirements: [{ 'api-key': [] }],
@@ -1882,7 +1912,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     'wallet_inscription_activity_by_address',
     {
       name: 'wallet_inscription_activity_by_address',
-      description: `Returns all inscription-related transactions involving a specific address. Can be filtered by activity type (send, receive, self-transfer), narrowed to a specific inscription, and sorted chronologically. Useful for building dashboards, tracking user behavior, or filtering unwanted spam activity.`,
+      description: `Returns all inscription-related transactions involving a specific address. Can be filtered by activity type (send, receive, self-transfer), narrowed to a specific inscription, and sorted chronologically. Mempool data is included by default. Useful for building dashboards, tracking user behavior, or filtering unwanted spam activity.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -1930,6 +1960,10 @@ In addition to confirmed transactions, mempool endpoints return data which refle
             description:
               'Exclude txs only containing inscriptions self-transfers. In presence of activity_kind, it cannot be self_transfer. In presence of inscription filter, that specific inscription should be sent or received, not self-transferred.',
           },
+          mempool: {
+            type: ['boolean', 'null'],
+            description: 'Include mempool data. Default: true.',
+          },
         },
         required: ['address'],
       },
@@ -1945,6 +1979,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
         { name: 'inscription_id', in: 'query' },
         { name: 'activity_kind', in: 'query' },
         { name: 'exclude_self_transfers', in: 'query' },
+        { name: 'mempool', in: 'query' },
       ],
       requestBodyContentType: undefined,
       securityRequirements: [{ 'api-key': [] }],
@@ -1954,7 +1989,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     'wallet_rune_activity_by_address',
     {
       name: 'wallet_rune_activity_by_address',
-      description: `Return all transactions where the specified address has rune activity, with the option to filter by a specific rune kind.`,
+      description: `Return all transactions where the specified address has rune activity, with the option to filter by a specific rune kind. Mempool data is included by default.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -2002,6 +2037,10 @@ In addition to confirmed transactions, mempool endpoints return data which refle
             description:
               'Exclude txs only containing runes self-transfers. In presence of activity_kind, it cannot be self_transfer. In presence of rune filter, that specific rune should be sent or received, not self-transferred.',
           },
+          mempool: {
+            type: ['boolean', 'null'],
+            description: 'Include mempool data. Default: true.',
+          },
         },
         required: ['address'],
       },
@@ -2017,6 +2056,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
         { name: 'rune', in: 'query' },
         { name: 'activity_kind', in: 'query' },
         { name: 'exclude_self_transfers', in: 'query' },
+        { name: 'mempool', in: 'query' },
       ],
       requestBodyContentType: undefined,
       securityRequirements: [{ 'api-key': [] }],
@@ -2026,7 +2066,7 @@ In addition to confirmed transactions, mempool endpoints return data which refle
     'wallet_address_statistics',
     {
       name: 'wallet_address_statistics',
-      description: `Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, and current satoshi, rune and inscription balance.`,
+      description: `Returns all current statistics of the address: total txs the address was involved in, total unspent outputs controlled by the address, current satoshi, control of any runes and inscription balance, distinguishing between confirmed and pending (still in the mempool) data.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -2555,9 +2595,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_EventManagerService_Healthcheck',
+    'EventManagerService_Healthcheck',
     {
-      name: 'event_manager_v1_EventManagerService_Healthcheck',
+      name: 'EventManagerService_Healthcheck',
       description: `Healthcheck`,
       inputSchema: { type: 'object', properties: {} },
       method: 'get',
@@ -2568,229 +2608,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_EventManagerService_ListManagers',
+    'EventManagerService_ListTriggers',
     {
-      name: 'event_manager_v1_EventManagerService_ListManagers',
-      description: `List all event managers
-
- Returns a list of all event managers associated with the API key. These represent configured webhook listeners for blockchain events.`,
-      inputSchema: { type: 'object', properties: {} },
-      method: 'get',
-      pathTemplate: '/eventmanager/managers',
-      executionParameters: [],
-      requestBodyContentType: undefined,
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'event_manager_v1_EventManagerService_CreateManager',
-    {
-      name: 'event_manager_v1_EventManagerService_CreateManager',
-      description: `Create a new event manager
-
- Creates a new event manager that defines a webhook URL and related triggers.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          requestBody: {
-            type: 'object',
-            properties: {
-              name: { type: 'string', title: 'name' },
-              chain: {
-                title: 'chain',
-                type: 'string',
-                enum: ['CHAIN_UNSPECIFIED', 'CHAIN_BITCOIN'],
-              },
-              network: {
-                title: 'network',
-                type: 'string',
-                enum: ['NETWORK_UNSPECIFIED', 'NETWORK_MAINNET', 'NETWORK_TESTNET'],
-              },
-              webhookUrl: { type: 'string', title: 'webhook_url' },
-              triggers: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    eventManagerId: { type: 'string', title: 'event_manager_id' },
-                    triggerType: {
-                      title: 'trigger_type',
-                      type: 'string',
-                      enum: [
-                        'TRIGGER_TYPE_UNSPECIFIED',
-                        'TRIGGER_TYPE_TRANSACTION',
-                        'TRIGGER_TYPE_SENDER',
-                        'TRIGGER_TYPE_RECEIVER',
-                        'TRIGGER_TYPE_SENDER_OR_RECEIVER',
-                      ],
-                    },
-                    trackedId: { type: 'string', title: 'tracked_id' },
-                    filters: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          key: { type: 'string', title: 'key' },
-                          operator: { type: 'string', title: 'operator' },
-                          value: { type: 'string', title: 'value' },
-                        },
-                        title: 'Filter',
-                        additionalProperties: false,
-                      },
-                      title: 'filters',
-                    },
-                  },
-                  title: 'CreateTriggerRequest',
-                  additionalProperties: false,
-                },
-                title: 'triggers',
-              },
-            },
-            title: 'CreateManagerRequest',
-            additionalProperties: false,
-            description: 'The JSON request body.',
-          },
-        },
-        required: ['requestBody'],
-      },
-      method: 'post',
-      pathTemplate: '/eventmanager/managers',
-      executionParameters: [],
-      requestBodyContentType: 'application/json',
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'event_manager_v1_EventManagerService_GetManager',
-    {
-      name: 'event_manager_v1_EventManagerService_GetManager',
-      description: `Fetch a specific event manager
-
- Retrieves the configuration of a specific manager identified by its unique \`id\`.`,
-      inputSchema: {
-        type: 'object',
-        properties: { id: { type: 'string', title: 'id' } },
-        required: ['id'],
-      },
-      method: 'get',
-      pathTemplate: '/eventmanager/managers/{id}',
-      executionParameters: [{ name: 'id', in: 'path' }],
-      requestBodyContentType: undefined,
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'event_manager_v1_EventManagerService_UpdateManager',
-    {
-      name: 'event_manager_v1_EventManagerService_UpdateManager',
-      description: `Update an existing event manager
-
- Updates an event manager’s metadata, webhook, or attached triggers identified by its unique \`id\`.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          id: { type: 'string', title: 'id' },
-          requestBody: {
-            type: 'object',
-            properties: {
-              eventManager: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string', title: 'id' },
-                  name: { type: 'string', title: 'name' },
-                  chain: {
-                    title: 'chain',
-                    type: 'string',
-                    enum: ['CHAIN_UNSPECIFIED', 'CHAIN_BITCOIN'],
-                  },
-                  network: {
-                    title: 'network',
-                    type: 'string',
-                    enum: ['NETWORK_UNSPECIFIED', 'NETWORK_MAINNET', 'NETWORK_TESTNET'],
-                  },
-                  webhookUrl: { type: 'string', title: 'webhook_url' },
-                  status: { type: 'string', title: 'status' },
-                  triggers: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        id: { type: 'string', title: 'id' },
-                        eventManagerId: { type: 'string', title: 'event_manager_id' },
-                        triggerType: {
-                          title: 'trigger_type',
-                          type: 'string',
-                          enum: [
-                            'TRIGGER_TYPE_UNSPECIFIED',
-                            'TRIGGER_TYPE_TRANSACTION',
-                            'TRIGGER_TYPE_SENDER',
-                            'TRIGGER_TYPE_RECEIVER',
-                            'TRIGGER_TYPE_SENDER_OR_RECEIVER',
-                          ],
-                        },
-                        trackedId: { type: 'string', title: 'tracked_id' },
-                        filters: {
-                          type: 'array',
-                          items: {
-                            type: 'object',
-                            properties: {
-                              key: { type: 'string', title: 'key' },
-                              operator: { type: 'string', title: 'operator' },
-                              value: { type: 'string', title: 'value' },
-                            },
-                            title: 'Filter',
-                            additionalProperties: false,
-                          },
-                          title: 'filters',
-                        },
-                      },
-                      title: 'Trigger',
-                      additionalProperties: false,
-                    },
-                    title: 'triggers',
-                  },
-                },
-                title: 'Manager',
-                additionalProperties: false,
-              },
-            },
-            title: 'UpdateManagerRequest',
-            additionalProperties: false,
-            description: 'The JSON request body.',
-          },
-        },
-        required: ['id', 'requestBody'],
-      },
-      method: 'put',
-      pathTemplate: '/eventmanager/managers/{id}',
-      executionParameters: [{ name: 'id', in: 'path' }],
-      requestBodyContentType: 'application/json',
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'event_manager_v1_EventManagerService_DeleteManager',
-    {
-      name: 'event_manager_v1_EventManagerService_DeleteManager',
-      description: `Delete an event manager
-
- Removes the manager and all associated triggers identified by its unique \`id\`.`,
-      inputSchema: {
-        type: 'object',
-        properties: { id: { type: 'string', title: 'id' } },
-        required: ['id'],
-      },
-      method: 'delete',
-      pathTemplate: '/eventmanager/managers/{id}',
-      executionParameters: [{ name: 'id', in: 'path' }],
-      requestBodyContentType: undefined,
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'event_manager_v1_EventManagerService_ListTriggers',
-    {
-      name: 'event_manager_v1_EventManagerService_ListTriggers',
+      name: 'EventManagerService_ListTriggers',
       description: `List all triggers
 
  Returns all individual triggers associated with your event managers.`,
@@ -2803,9 +2623,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_EventManagerService_CreateTrigger',
+    'EventManagerService_CreateTrigger',
     {
-      name: 'event_manager_v1_EventManagerService_CreateTrigger',
+      name: 'EventManagerService_CreateTrigger',
       description: `Create a new trigger
 
  Adds a trigger to a manager to listen for specific blockchain activity.`,
@@ -2815,32 +2635,81 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
           requestBody: {
             type: 'object',
             properties: {
-              eventManagerId: { type: 'string', title: 'event_manager_id' },
-              triggerType: {
-                title: 'trigger_type',
+              name: { type: 'string', title: 'name' },
+              chain: {
                 type: 'string',
-                enum: [
-                  'TRIGGER_TYPE_UNSPECIFIED',
-                  'TRIGGER_TYPE_TRANSACTION',
-                  'TRIGGER_TYPE_SENDER',
-                  'TRIGGER_TYPE_RECEIVER',
-                  'TRIGGER_TYPE_SENDER_OR_RECEIVER',
-                ],
+                examples: ['bitcoin'],
+                title: 'chain',
+                enum: ['bitcoin'],
+                description: 'Blockchain to listen on (bitcoin)',
               },
-              trackedId: { type: 'string', title: 'tracked_id' },
+              network: {
+                type: 'string',
+                examples: ['mainnet'],
+                title: 'network',
+                enum: ['mainnet', 'testnet'],
+                description: 'Network environment to listen on (mainnet)',
+              },
+              type: {
+                type: 'string',
+                examples: ['transaction'],
+                title: 'type',
+                enum: ['transaction'],
+                description: 'Trigger type, e.g., transaction',
+              },
+              webhook_url: {
+                type: 'string',
+                examples: ['https://webhook.site/your-endpoint'],
+                title: 'webhook_url',
+                format: 'uri',
+                description: 'Webhook URL to receive events',
+              },
               filters: {
                 type: 'array',
                 items: {
                   type: 'object',
                   properties: {
-                    key: { type: 'string', title: 'key' },
-                    operator: { type: 'string', title: 'operator' },
+                    key: {
+                      type: 'string',
+                      examples: ['sender'],
+                      title: 'key',
+                      enum: [
+                        'sender',
+                        'receiver',
+                        'sender_or_receiver',
+                        'transaction_id',
+                        'total_input_volume',
+                        'fee',
+                        'size',
+                        'weight',
+                      ],
+                      description:
+                        'Condition to match on: sender, receiver, sender_or_receiver (addresses), transaction_id, total_input_volume, fee, size, weight',
+                    },
+                    operator: {
+                      type: 'string',
+                      examples: ['='],
+                      title: 'operator',
+                      enum: ['=', '>', '>=', '<', '<='],
+                      description:
+                        'Condition operation: =, >, >=, <, <=. Fields like receiver and transaction_id can only be exact (=)',
+                    },
                     value: { type: 'string', title: 'value' },
                   },
                   title: 'Filter',
                   additionalProperties: false,
+                  description:
+                    "For key in [sender, receiver, sender_or_receiver, transaction_id], operator must be '=':\n```\n!(this.key in ['sender', 'receiver', 'sender_or_receiver', 'transaction_id']) || this.operator == '='\n```\n\n",
                 },
                 title: 'filters',
+              },
+              confirmations: {
+                type: 'number',
+                examples: ['5'],
+                title: 'confirmations',
+                format: 'int32',
+                description:
+                  'Number of confirmations required for the transaction to be matched by this trigger',
               },
             },
             title: 'CreateTriggerRequest',
@@ -2858,9 +2727,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_EventManagerService_GetTrigger',
+    'EventManagerService_GetTrigger',
     {
-      name: 'event_manager_v1_EventManagerService_GetTrigger',
+      name: 'EventManagerService_GetTrigger',
       description: `Fetch trigger details
 
  Returns metadata and configuration for a specific trigger identified by its unique \`id\`.`,
@@ -2877,9 +2746,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_EventManagerService_UpdateTrigger',
+    'EventManagerService_UpdateTrigger',
     {
-      name: 'event_manager_v1_EventManagerService_UpdateTrigger',
+      name: 'EventManagerService_UpdateTrigger',
       description: `Update a trigger
 
  Allows modification of a trigger's properties identified by its unique \`id\`.`,
@@ -2890,40 +2759,88 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
           requestBody: {
             type: 'object',
             properties: {
-              trigger: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string', title: 'id' },
-                  eventManagerId: { type: 'string', title: 'event_manager_id' },
-                  triggerType: {
-                    title: 'trigger_type',
-                    type: 'string',
-                    enum: [
-                      'TRIGGER_TYPE_UNSPECIFIED',
-                      'TRIGGER_TYPE_TRANSACTION',
-                      'TRIGGER_TYPE_SENDER',
-                      'TRIGGER_TYPE_RECEIVER',
-                      'TRIGGER_TYPE_SENDER_OR_RECEIVER',
-                    ],
-                  },
-                  trackedId: { type: 'string', title: 'tracked_id' },
-                  filters: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        key: { type: 'string', title: 'key' },
-                        operator: { type: 'string', title: 'operator' },
-                        value: { type: 'string', title: 'value' },
-                      },
-                      title: 'Filter',
-                      additionalProperties: false,
+              name: { type: 'string', title: 'name' },
+              chain: {
+                type: 'string',
+                examples: ['bitcoin'],
+                title: 'chain',
+                enum: ['bitcoin'],
+                description: 'Blockchain to listen on (bitcoin)',
+              },
+              network: {
+                type: 'string',
+                examples: ['mainnet'],
+                title: 'network',
+                enum: ['mainnet', 'testnet'],
+                description: 'Network environment to listen on (mainnet)',
+              },
+              type: {
+                type: 'string',
+                examples: ['transaction'],
+                title: 'type',
+                enum: ['transaction'],
+                description: 'Trigger type, e.g., transaction',
+              },
+              webhook_url: {
+                type: 'string',
+                examples: ['https://webhook.site/your-endpoint'],
+                title: 'webhook_url',
+                format: 'uri',
+                description: 'Webhook URL to receive events',
+              },
+              filters: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    key: {
+                      type: 'string',
+                      examples: ['sender'],
+                      title: 'key',
+                      enum: [
+                        'sender',
+                        'receiver',
+                        'sender_or_receiver',
+                        'transaction_id',
+                        'total_input_volume',
+                        'fee',
+                        'size',
+                        'weight',
+                      ],
+                      description:
+                        'Condition to match on: sender, receiver, sender_or_receiver (addresses), transaction_id, total_input_volume, fee, size, weight',
                     },
-                    title: 'filters',
+                    operator: {
+                      type: 'string',
+                      examples: ['='],
+                      title: 'operator',
+                      enum: ['=', '>', '>=', '<', '<='],
+                      description:
+                        'Condition operation: =, >, >=, <, <=. Fields like receiver and transaction_id can only be exact (=)',
+                    },
+                    value: { type: 'string', title: 'value' },
                   },
+                  title: 'Filter',
+                  additionalProperties: false,
+                  description:
+                    "For key in [sender, receiver, sender_or_receiver, transaction_id], operator must be '=':\n```\n!(this.key in ['sender', 'receiver', 'sender_or_receiver', 'transaction_id']) || this.operator == '='\n```\n\n",
                 },
-                title: 'Trigger',
-                additionalProperties: false,
+                title: 'filters',
+              },
+              confirmations: {
+                type: 'number',
+                examples: ['5'],
+                title: 'confirmations',
+                format: 'int32',
+                description:
+                  'Number of confirmations required for the transaction to be matched by this trigger',
+              },
+              status: {
+                type: 'string',
+                examples: ['active'],
+                title: 'status',
+                enum: ['active', 'paused'],
+                description: 'Status of the trigger, either active or inactive',
               },
             },
             title: 'UpdateTriggerRequest',
@@ -2941,9 +2858,9 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_EventManagerService_DeleteTrigger',
+    'EventManagerService_DeleteTrigger',
     {
-      name: 'event_manager_v1_EventManagerService_DeleteTrigger',
+      name: 'EventManagerService_DeleteTrigger',
       description: `Remove a trigger
 
  Deletes a specific trigger identified by its unique \`id\`, leaving the event manager intact.`,
@@ -2960,9 +2877,35 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_EventManagerService_GetEventLog',
+    'EventManagerService_GetTriggerConditionOptions',
     {
-      name: 'event_manager_v1_EventManagerService_GetEventLog',
+      name: 'EventManagerService_GetTriggerConditionOptions',
+      description: `Fetch picklist options by name
+
+ Returns a list of picklist options identified by its unique \`name\`.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          trigger_type: {
+            type: 'string',
+            examples: ['transaction'],
+            title: 'trigger_type',
+            enum: ['transaction'],
+            description: 'Condition key',
+          },
+        },
+      },
+      method: 'get',
+      pathTemplate: '/eventmanager/triggers/trigger-condition-options',
+      executionParameters: [{ name: 'trigger_type', in: 'query' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'EventManagerService_GetEventLog',
+    {
+      name: 'EventManagerService_GetEventLog',
       description: `Fetch a single event log by ID
 
  Returns the payload, status, and response of a specific event log identified by its unique \`id\`.`,
@@ -2979,125 +2922,62 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
-    'event_manager_v1_EventManagerService_ListEventLogs',
+    'EventManagerService_ListEventLogs',
     {
-      name: 'event_manager_v1_EventManagerService_ListEventLogs',
+      name: 'EventManagerService_ListEventLogs',
       description: `Fetch all event logs
 
  Returns a list of event logs that have been generated from event manager triggers. Each log captures a payload, response status, and other metadata.`,
-      inputSchema: { type: 'object', properties: {} },
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: {
+            type: 'number',
+            examples: ['1'],
+            title: 'page',
+            minimum: 1,
+            format: 'int32',
+            description: 'Page number for paginated results (starts from 1)',
+          },
+          limit: {
+            type: 'number',
+            examples: ['20'],
+            title: 'limit',
+            maximum: 100,
+            minimum: 1,
+            format: 'int32',
+            description: 'Number of items per page',
+          },
+          trigger_id: {
+            type: 'string',
+            examples: ['trigger123'],
+            title: 'trigger_id',
+            description: 'Filter logs by trigger ID',
+          },
+          chain: {
+            type: 'string',
+            examples: ['bitcoin'],
+            title: 'chain',
+            description: 'Filter logs by chain',
+          },
+          network: {
+            type: 'string',
+            examples: ['mainnet'],
+            title: 'network',
+            description: 'Filter logs by network',
+          },
+        },
+      },
       method: 'get',
       pathTemplate: '/eventmanager/logs',
-      executionParameters: [],
+      executionParameters: [
+        { name: 'page', in: 'query' },
+        { name: 'limit', in: 'query' },
+        { name: 'trigger_id', in: 'query' },
+        { name: 'chain', in: 'query' },
+        { name: 'network', in: 'query' },
+      ],
       requestBodyContentType: undefined,
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'event_manager_v1_EventManagerService_GetPicklistOptions',
-    {
-      name: 'event_manager_v1_EventManagerService_GetPicklistOptions',
-      description: `Fetch picklist options by name
-
- Returns a list of picklist options identified by its unique \`name\`.`,
-      inputSchema: {
-        type: 'object',
-        properties: { name: { type: 'string', title: 'name' } },
-        required: ['name'],
-      },
-      method: 'get',
-      pathTemplate: '/eventmanager/picklist_options/{name}',
-      executionParameters: [{ name: 'name', in: 'path' }],
-      requestBodyContentType: undefined,
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'event_manager_v1_EventManagerService_ListDailyComputeCredits',
-    {
-      name: 'event_manager_v1_EventManagerService_ListDailyComputeCredits',
-      description: `Fetch daily compute credits
- 
- Fetches the compute credits available (calculation for previous day).`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          requestBody: {
-            type: 'object',
-            properties: {
-              ids: { type: 'array', items: { type: 'string' }, title: 'ids' },
-              date: {
-                title: 'date',
-                type: 'string',
-                examples: ['1s', '1.000340012s'],
-                format: 'date-time',
-                description:
-                  'A Timestamp represents a point in time independent of any time zone or local\n calendar, encoded as a count of seconds and fractions of seconds at\n nanosecond resolution. The count is relative to an epoch at UTC midnight on\n January 1, 1970, in the proleptic Gregorian calendar which extends the\n Gregorian calendar backwards to year one.\n\n All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap\n second table is needed for interpretation, using a [24-hour linear\n smear](https://developers.google.com/time/smear).\n\n The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By\n restricting to that range, we ensure that we can convert to and from [RFC\n 3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.\n\n # Examples\n\n Example 1: Compute Timestamp from POSIX `time()`.\n\n     Timestamp timestamp;\n     timestamp.set_seconds(time(NULL));\n     timestamp.set_nanos(0);\n\n Example 2: Compute Timestamp from POSIX `gettimeofday()`.\n\n     struct timeval tv;\n     gettimeofday(&tv, NULL);\n\n     Timestamp timestamp;\n     timestamp.set_seconds(tv.tv_sec);\n     timestamp.set_nanos(tv.tv_usec * 1000);\n\n Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.\n\n     FILETIME ft;\n     GetSystemTimeAsFileTime(&ft);\n     UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;\n\n     // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z\n     // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.\n     Timestamp timestamp;\n     timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));\n     timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));\n\n Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.\n\n     long millis = System.currentTimeMillis();\n\n     Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)\n         .setNanos((int) ((millis % 1000) * 1000000)).build();\n\n Example 5: Compute Timestamp from Java `Instant.now()`.\n\n     Instant now = Instant.now();\n\n     Timestamp timestamp =\n         Timestamp.newBuilder().setSeconds(now.getEpochSecond())\n             .setNanos(now.getNano()).build();\n\n Example 6: Compute Timestamp from current time in Python.\n\n     timestamp = Timestamp()\n     timestamp.GetCurrentTime()\n\n # JSON Mapping\n\n In JSON format, the Timestamp type is encoded as a string in the\n [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the\n format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"\n where {year} is always expressed using four digits while {month}, {day},\n {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional\n seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),\n are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone\n is required. A proto3 JSON serializer should always use UTC (as indicated by\n "Z") when printing the Timestamp type and a proto3 JSON parser should be\n able to accept both UTC and other timezones (as indicated by an offset).\n\n For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past\n 01:30 UTC on January 15, 2017.\n\n In JavaScript, one can convert a Date object to this format using the\n standard\n [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)\n method. In Python, a standard `datetime.datetime` object can be converted\n to this format using\n [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with\n the time format spec \'%Y-%m-%dT%H:%M:%S.%fZ\'. Likewise, in Java, one can use\n the Joda Time\'s [`ISODateTimeFormat.dateTime()`](\n http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()\n ) to obtain a formatter capable of generating timestamps in this format.',
-              },
-            },
-            title: 'ListDailyComputeCreditsRequest',
-            additionalProperties: false,
-            description: 'The JSON request body.',
-          },
-        },
-        required: ['requestBody'],
-      },
-      method: 'post',
-      pathTemplate: '/_internal/daily_credits',
-      executionParameters: [],
-      requestBodyContentType: 'application/json',
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'mkt-btc-prices-by-timestamps',
-    {
-      name: 'mkt-btc-prices-by-timestamps',
-      description: `Returns BTC-USD prices for the provided list of UTC timestamps. Timestamps are matched against minute-aligned entries in the database.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          requestBody: {
-            properties: {
-              timestamps: {
-                items: { type: 'number' },
-                maxItems: 100,
-                minItems: 1,
-                type: 'array',
-                uniqueItems: false,
-              },
-            },
-            required: ['timestamps'],
-            type: 'object',
-            description: 'Array of UTC timestamps',
-          },
-        },
-        required: ['requestBody'],
-      },
-      method: 'post',
-      pathTemplate: '/markets/btc/prices/batch',
-      executionParameters: [],
-      requestBodyContentType: 'application/json',
-      securityRequirements: [{ 'api-key': [] }],
-    },
-  ],
-  [
-    'mkt-btc-price-by-timestamp',
-    {
-      name: 'mkt-btc-price-by-timestamp',
-      description: `Returns BTC-USD price for the provided UTC timestamp.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          timestamp: { type: 'number', description: 'Unix timestamp in seconds' },
-          requestBody: { type: 'object', description: 'The JSON request body.' },
-        },
-        required: ['timestamp'],
-      },
-      method: 'get',
-      pathTemplate: '/markets/btc/prices/{timestamp}',
-      executionParameters: [{ name: 'timestamp', in: 'path' }],
-      requestBodyContentType: 'application/json',
       securityRequirements: [{ 'api-key': [] }],
     },
   ],
@@ -3105,7 +2985,7 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     'mkt-dexs',
     {
       name: 'mkt-dexs',
-      description: `Retrieves a list of all decentralized exchanges (DEXs) currently indexed and supported by the API. This serves as the discovery endpoint for clients to programmatically identify valid DEX identifiers used in other endpoints like trades or OHLC queries.`,
+      description: `Retrieves a list of all options for decentralized exchanges (DEXs) currently indexed and supported by the API. This serves as the discovery endpoint for clients to programmatically identify valid DEX identifiers used in other endpoints like trades or OHLC queries. The all option represents all DEXs combined`,
       inputSchema: { type: 'object', properties: {} },
       method: 'get',
       pathTemplate: '/markets/dexs',
@@ -3122,7 +3002,12 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
       inputSchema: {
         type: 'object',
         properties: {
-          dex: { default: 'magiceden', type: 'string', description: 'Name of the DEX' },
+          dex: {
+            default: 'magiceden',
+            enum: ['all', 'magiceden', 'dotswap'],
+            type: 'string',
+            description: 'Name of the DEX',
+          },
           symbol: {
             default: 'BTC-840000:28',
             type: 'string',
@@ -3189,7 +3074,12 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
       inputSchema: {
         type: 'object',
         properties: {
-          dex: { default: 'magiceden', type: 'string', description: 'Name of the DEX' },
+          dex: {
+            default: 'magiceden',
+            enum: ['all', 'magiceden', 'dotswap'],
+            type: 'string',
+            description: 'Name of the DEX',
+          },
           symbol: {
             default: 'BTC-840000:28',
             type: 'string',
@@ -3235,6 +3125,134 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
     },
   ],
   [
+    'mkt-btc-prices-by-timestamps',
+    {
+      name: 'mkt-btc-prices-by-timestamps',
+      description: `Returns BTC-USD prices for the provided list of UTC timestamps. Timestamps are matched against minute-aligned entries in the database.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          requestBody: {
+            oneOf: [
+              { type: 'object' },
+              {
+                summary: 'request',
+                description: 'Array of UTC timestamps',
+                properties: {
+                  timestamps: {
+                    items: { type: 'integer' },
+                    maxItems: 101,
+                    minItems: 1,
+                    type: 'array',
+                    uniqueItems: false,
+                  },
+                },
+                required: ['timestamps'],
+                type: 'object',
+              },
+            ],
+            description: 'Array of UTC timestamps',
+          },
+        },
+        required: ['requestBody'],
+      },
+      method: 'post',
+      pathTemplate: '/markets/prices/batch',
+      executionParameters: [],
+      requestBodyContentType: 'application/json',
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'mkt-rune-prices-by-timestamps',
+    {
+      name: 'mkt-rune-prices-by-timestamps',
+      description: `Returns Rune prices in USD and satoshi for the provided list of Rune ID <> UTC timestamps pairs.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          requestBody: {
+            oneOf: [
+              { type: 'object' },
+              {
+                summary: 'request',
+                description: 'Array of RuneID <> UTC timestamp pairs',
+                properties: {
+                  data: {
+                    items: {
+                      properties: {
+                        rune_id: { example: 'BTC-840000:1', type: 'string' },
+                        timestamp: { example: 1746109820, type: 'integer' },
+                      },
+                      required: ['rune_id', 'timestamp'],
+                      type: 'object',
+                    },
+                    maxItems: 101,
+                    minItems: 1,
+                    type: 'array',
+                    uniqueItems: false,
+                  },
+                },
+                required: ['data'],
+                type: 'object',
+              },
+            ],
+            description: 'Array of RuneID <> UTC timestamp pairs',
+          },
+        },
+        required: ['requestBody'],
+      },
+      method: 'post',
+      pathTemplate: '/markets/prices/runes/batch',
+      executionParameters: [],
+      requestBodyContentType: 'application/json',
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'mkt-rune-price-by-timestamp',
+    {
+      name: 'mkt-rune-price-by-timestamp',
+      description: `Returns Rune price in USD and satoshi for the provided UTC timestamp.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          rune_id: {
+            type: 'string',
+            description: 'Rune ID in the format <etching_block>:<etching_tx>',
+          },
+          timestamp: { type: 'number', description: 'Unix timestamp in seconds' },
+        },
+        required: ['rune_id', 'timestamp'],
+      },
+      method: 'get',
+      pathTemplate: '/markets/prices/runes/{rune_id}/{timestamp}',
+      executionParameters: [
+        { name: 'rune_id', in: 'path' },
+        { name: 'timestamp', in: 'path' },
+      ],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'mkt-btc-price-by-timestamp',
+    {
+      name: 'mkt-btc-price-by-timestamp',
+      description: `Returns BTC-USD price for the provided UTC timestamp.`,
+      inputSchema: {
+        type: 'object',
+        properties: { timestamp: { type: 'number', description: 'Unix timestamp in seconds' } },
+        required: ['timestamp'],
+      },
+      method: 'get',
+      pathTemplate: '/markets/prices/{timestamp}',
+      executionParameters: [{ name: 'timestamp', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
     'mkt-dex',
     {
       name: 'mkt-dex',
@@ -3274,6 +3292,537 @@ Useful for retrieving lastest transactions or monitoring new, on-chain activity 
       securityRequirements: [{ 'api-key': [] }],
     },
   ],
+  [
+    'esplora_address_details',
+    {
+      name: 'esplora_address_details',
+      description: `Returns details about an address. Available fields: address, chain_stats, and mempool_stats. chain_stats and mempool_stats each contain an object with tx_count, funded_txo_count, funded_txo_sum, spent_txo_count, and spent_txo_sum.`,
+      inputSchema: {
+        type: 'object',
+        properties: { address: { type: 'string', description: 'Bitcoin address to query' } },
+        required: ['address'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/address/{address}',
+      executionParameters: [{ name: 'address', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_address_transactions',
+    {
+      name: 'esplora_address_transactions',
+      description: `Get transaction history for the specified address/scripthash, sorted with newest first. Returns up to 50 mempool transactions plus the first 25 confirmed transactions. You can request more confirmed transactions using an after_txid query parameter.`,
+      inputSchema: {
+        type: 'object',
+        properties: { address: { type: 'string', description: 'The Bitcoin address to query.' } },
+        required: ['address'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/address/{address}/txs',
+      executionParameters: [{ name: 'address', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_address_transactions_chain',
+    {
+      name: 'esplora_address_transactions_chain',
+      description: `Get confirmed transaction history for the specified address/scripthash, sorted with newest first. Returns 25 transactions per page. More can be requested by specifying the last txid seen by the previous query.`,
+      inputSchema: {
+        type: 'object',
+        properties: { address: { type: 'string', description: 'The Bitcoin address to query.' } },
+        required: ['address'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/address/{address}/txs/chain',
+      executionParameters: [{ name: 'address', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_address_transactions_mempool',
+    {
+      name: 'esplora_address_transactions_mempool',
+      description: `Get unconfirmed transaction history for the specified address/scripthash. Returns up to 50 transactions (no paging).`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          address: {
+            type: 'string',
+            description: 'The Bitcoin address whose unconfirmed transactions should be retrieved.',
+          },
+        },
+        required: ['address'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/address/{address}/txs/mempool',
+      executionParameters: [{ name: 'address', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_address_utxos',
+    {
+      name: 'esplora_address_utxos',
+      description: `Get the list of unspent transaction outputs associated with the address/scripthash. Available fields: txid, vout, value, and status (with the status of the funding tx).`,
+      inputSchema: {
+        type: 'object',
+        properties: { address: { type: 'string', description: 'The Bitcoin address to query.' } },
+        required: ['address'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/address/{address}/utxo',
+      executionParameters: [{ name: 'address', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_details',
+    {
+      name: 'esplora_block_details',
+      description: `Returns details about a block.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          hash: { type: 'string', description: 'The block hash to retrieve information for.' },
+        },
+        required: ['hash'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/block/{hash}',
+      executionParameters: [{ name: 'hash', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_header',
+    {
+      name: 'esplora_block_header',
+      description: `Returns the hex-encoded block header.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          hash: {
+            type: 'string',
+            description: 'The hash of the block to retrieve the header for.',
+          },
+        },
+        required: ['hash'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/block/{hash}/header',
+      executionParameters: [{ name: 'hash', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_status',
+    {
+      name: 'esplora_block_status',
+      description: `Returns the confirmation status of a block. Available fields: in_best_chain (boolean, false for orphaned blocks), next_best (the hash of the next block, only available for blocks in the best chain).`,
+      inputSchema: {
+        type: 'object',
+        properties: { hash: { type: 'string', description: 'The block hash to query' } },
+        required: ['hash'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/block/{hash}/status',
+      executionParameters: [{ name: 'hash', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_transactions',
+    {
+      name: 'esplora_block_transactions',
+      description: `Returns a list of transactions in the block (up to 25 transactions beginning at start_index). Transactions returned here do not have the status field, since all the transactions share the same block and confirmation status.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          hash: { type: 'string', description: 'The block hash.' },
+          start_index: {
+            type: 'number',
+            minimum: 0,
+            description: 'Index to start fetching transactions from (pagination).',
+          },
+        },
+        required: ['hash', 'start_index'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/block/{hash}/txs/{start_index}',
+      executionParameters: [
+        { name: 'hash', in: 'path' },
+        { name: 'start_index', in: 'path' },
+      ],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_txids',
+    {
+      name: 'esplora_block_txids',
+      description: `Returns a list of all txids in the block.`,
+      inputSchema: {
+        type: 'object',
+        properties: { hash: { type: 'string', description: 'The hash of the block to query.' } },
+        required: ['hash'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/block/{hash}/txids',
+      executionParameters: [{ name: 'hash', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_txid_by_index',
+    {
+      name: 'esplora_block_txid_by_index',
+      description: `Returns the transaction at index :index within the specified block.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          hash: { type: 'string', description: 'The block hash.' },
+          index: {
+            type: 'number',
+            minimum: 0,
+            description: 'The transaction index within the block.',
+          },
+        },
+        required: ['hash', 'index'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/block/{hash}/txid/{index}',
+      executionParameters: [
+        { name: 'hash', in: 'path' },
+        { name: 'index', in: 'path' },
+      ],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_raw',
+    {
+      name: 'esplora_block_raw',
+      description: `Returns the raw block representation in binary.`,
+      inputSchema: {
+        type: 'object',
+        properties: { hash: { type: 'string', description: 'The hash of the block' } },
+        required: ['hash'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/block/{hash}/raw',
+      executionParameters: [{ name: 'hash', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_blocks',
+    {
+      name: 'esplora_blocks',
+      description: `Returns details on the past 10 blocks. If :startHeight is specified, the 10 blocks before (and including) :startHeight are returned.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          start_height: { type: 'number', description: 'The block height to start from.' },
+        },
+        required: ['start_height'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/blocks/{start_height}',
+      executionParameters: [{ name: 'start_height', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_hash_by_height',
+    {
+      name: 'esplora_block_hash_by_height',
+      description: `Returns the hash of the block currently at :height.`,
+      inputSchema: {
+        type: 'object',
+        properties: { height: { type: 'number', description: 'The height of the block.' } },
+        required: ['height'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/block-height/{height}',
+      executionParameters: [{ name: 'height', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_tip_height',
+    {
+      name: 'esplora_block_tip_height',
+      description: `Returns the height of the last block.`,
+      inputSchema: { type: 'object', properties: {} },
+      method: 'get',
+      pathTemplate: '/esplora/blocks/tip/height',
+      executionParameters: [],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_block_tip_hash',
+    {
+      name: 'esplora_block_tip_hash',
+      description: `Returns the hash of the last block.`,
+      inputSchema: { type: 'object', properties: {} },
+      method: 'get',
+      pathTemplate: '/esplora/blocks/tip/hash',
+      executionParameters: [],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_mempool_stats',
+    {
+      name: 'esplora_mempool_stats',
+      description: `Returns current mempool backlog statistics.`,
+      inputSchema: { type: 'object', properties: {} },
+      method: 'get',
+      pathTemplate: '/esplora/mempool',
+      executionParameters: [],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_mempool_txids',
+    {
+      name: 'esplora_mempool_txids',
+      description: `Get the full list of txids in the mempool as an array. The order of the txids is arbitrary and does not match bitcoind.`,
+      inputSchema: { type: 'object', properties: {} },
+      method: 'get',
+      pathTemplate: '/esplora/mempool/txids',
+      executionParameters: [],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_mempool_recent',
+    {
+      name: 'esplora_mempool_recent',
+      description: `Get a list of the last 10 transactions to enter the mempool. Each transaction object contains simplified overview data, with the following fields: txid, fee, vsize, and value.`,
+      inputSchema: { type: 'object', properties: {} },
+      method: 'get',
+      pathTemplate: '/esplora/mempool/recent',
+      executionParameters: [],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_details',
+    {
+      name: 'esplora_transaction_details',
+      description: `Returns details about a transaction. Available fields: txid, version, locktime, size, weight, fee, vin, vout, and status.`,
+      inputSchema: {
+        type: 'object',
+        properties: { txid: { type: 'string', description: 'The transaction ID to look up.' } },
+        required: ['txid'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}',
+      executionParameters: [{ name: 'txid', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_hex',
+    {
+      name: 'esplora_transaction_hex',
+      description: `Returns a transaction serialized as hex.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          txid: { type: 'string', description: 'Transaction ID of the transaction to fetch.' },
+        },
+        required: ['txid'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}/hex',
+      executionParameters: [{ name: 'txid', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_merkleblock_proof',
+    {
+      name: 'esplora_transaction_merkleblock_proof',
+      description: `Returns a merkle inclusion proof for the transaction using bitcoind's merkleblock format.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          txid: {
+            type: 'string',
+            description: 'The transaction ID to retrieve the merkleblock proof for.',
+          },
+        },
+        required: ['txid'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}/merkleblock-proof',
+      executionParameters: [{ name: 'txid', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_merkle_proof',
+    {
+      name: 'esplora_transaction_merkle_proof',
+      description: `Returns a merkle inclusion proof for the transaction using Electrum's blockchain.transaction.get_merkle format.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          txid: { type: 'string', description: 'The transaction ID to get the merkle proof for.' },
+        },
+        required: ['txid'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}/merkle-proof',
+      executionParameters: [{ name: 'txid', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_outspend',
+    {
+      name: 'esplora_transaction_outspend',
+      description: `Returns the spending status of a transaction output. Available fields: spent (boolean), txid (optional), vin (optional), and status (optional, the status of the spending tx).`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          txid: { type: 'string', description: 'Transaction ID of the parent transaction.' },
+          vout: { type: 'number', description: 'The output index within the transaction.' },
+        },
+        required: ['txid', 'vout'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}/outspend/{vout}',
+      executionParameters: [
+        { name: 'txid', in: 'path' },
+        { name: 'vout', in: 'path' },
+      ],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_outspends',
+    {
+      name: 'esplora_transaction_outspends',
+      description: `Returns the spending status of all transaction outputs.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          txid: { type: 'string', description: 'The transaction ID (txid) to query.' },
+        },
+        required: ['txid'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}/outspends',
+      executionParameters: [{ name: 'txid', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_raw',
+    {
+      name: 'esplora_transaction_raw',
+      description: `Returns a transaction as binary data.`,
+      inputSchema: {
+        type: 'object',
+        properties: { txid: { type: 'string', description: 'The transaction ID.' } },
+        required: ['txid'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}/raw',
+      executionParameters: [{ name: 'txid', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_rbf_timeline',
+    {
+      name: 'esplora_transaction_rbf_timeline',
+      description: `Returns the RBF tree timeline of a transaction.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          txid: {
+            type: 'string',
+            description: 'The transaction ID to trace RBF replacements for.',
+          },
+        },
+        required: ['txid'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}/rbf',
+      executionParameters: [{ name: 'txid', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_transaction_status',
+    {
+      name: 'esplora_transaction_status',
+      description: `Returns the confirmation status of a transaction. Available fields: confirmed (boolean), block_height (optional), and block_hash (optional).`,
+      inputSchema: {
+        type: 'object',
+        properties: { txid: { type: 'string', description: 'Transaction ID to query.' } },
+        required: ['txid'],
+      },
+      method: 'get',
+      pathTemplate: '/esplora/tx/{txid}/status',
+      executionParameters: [{ name: 'txid', in: 'path' }],
+      requestBodyContentType: undefined,
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
+  [
+    'esplora_broadcast_transaction',
+    {
+      name: 'esplora_broadcast_transaction',
+      description: `Broadcast a raw transaction to the network. The transaction should be provided as hex in the request body. The txid will be returned on success.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          requestBody: { type: 'string', description: 'Hex-encoded raw transaction data.' },
+        },
+        required: ['requestBody'],
+      },
+      method: 'post',
+      pathTemplate: '/esplora/tx',
+      executionParameters: [],
+      requestBodyContentType: 'text/plain',
+      securityRequirements: [{ 'api-key': [] }],
+    },
+  ],
 ]);
 
 /**
@@ -3306,7 +3855,6 @@ server.setRequestHandler(
       console.error(`Error: Unknown tool requested: ${toolName}`);
       return { content: [{ type: 'text', text: `Error: Unknown tool requested: ${toolName}` }] };
     }
-
     return await executeApiTool(
       toolName,
       toolDefinition,
@@ -3517,71 +4065,54 @@ async function executeApiTool(
 
     // // Apply security requirements if available
     // // Security requirements use OR between array items and AND within each object
-    // const appliedSecurity = definition.securityRequirements?.find((req) => {
-    //   // Try each security requirement (combined with OR)
-    //   return Object.entries(req).every(([schemeName, scopesArray]) => {
-    //     const scheme = allSecuritySchemes[schemeName];
-    //     if (!scheme) return false;
+    // const appliedSecurity = definition.securityRequirements?.find(req => {
+    //     // Try each security requirement (combined with OR)
+    //     return Object.entries(req).every(([schemeName, scopesArray]) => {
+    //         const scheme = allSecuritySchemes[schemeName];
+    //         if (!scheme) return false;
 
-    //     // API Key security (header, query, cookie)
-    //     if (scheme.type === 'apiKey') {
-    //       return !!process.env[`API_KEY_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
-    //     }
-
-    //     // HTTP security (basic, bearer)
-    //     if (scheme.type === 'http') {
-    //       if (scheme.scheme?.toLowerCase() === 'bearer') {
-    //         return !!process.env[
-    //           `BEARER_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`
-    //         ];
-    //       } else if (scheme.scheme?.toLowerCase() === 'basic') {
-    //         return (
-    //           !!process.env[
-    //             `BASIC_USERNAME_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`
-    //           ] &&
-    //           !!process.env[
-    //             `BASIC_PASSWORD_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`
-    //           ]
-    //         );
-    //       }
-    //     }
-
-    //     // OAuth2 security
-    //     if (scheme.type === 'oauth2') {
-    //       // Check for pre-existing token
-    //       if (
-    //         process.env[`OAUTH_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`]
-    //       ) {
-    //         return true;
-    //       }
-
-    //       // Check for client credentials for auto-acquisition
-    //       if (
-    //         process.env[
-    //           `OAUTH_CLIENT_ID_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`
-    //         ] &&
-    //         process.env[
-    //           `OAUTH_CLIENT_SECRET_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`
-    //         ]
-    //       ) {
-    //         // Verify we have a supported flow
-    //         if (scheme.flows?.clientCredentials || scheme.flows?.password) {
-    //           return true;
+    //         // API Key security (header, query, cookie)
+    //         if (scheme.type === 'apiKey') {
+    //             return !!process.env[`API_KEY_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
     //         }
-    //       }
 
-    //       return false;
-    //     }
+    //         // HTTP security (basic, bearer)
+    //         if (scheme.type === 'http') {
+    //             if (scheme.scheme?.toLowerCase() === 'bearer') {
+    //                 return !!process.env[`BEARER_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+    //             }
+    //             else if (scheme.scheme?.toLowerCase() === 'basic') {
+    //                 return !!process.env[`BASIC_USERNAME_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`] &&
+    //                        !!process.env[`BASIC_PASSWORD_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+    //             }
+    //         }
 
-    //     // OpenID Connect
-    //     if (scheme.type === 'openIdConnect') {
-    //       return !!process.env[
-    //         `OPENID_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`
-    //       ];
-    //     }
+    //         // OAuth2 security
+    //         if (scheme.type === 'oauth2') {
+    //             // Check for pre-existing token
+    //             if (process.env[`OAUTH_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`]) {
+    //                 return true;
+    //             }
 
-    //     return false;
-    //   });
+    //             // Check for client credentials for auto-acquisition
+    //             if (process.env[`OAUTH_CLIENT_ID_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`] &&
+    //                 process.env[`OAUTH_CLIENT_SECRET_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`]) {
+    //                 // Verify we have a supported flow
+    //                 if (scheme.flows?.clientCredentials || scheme.flows?.password) {
+    //                     return true;
+    //                 }
+    //             }
+
+    //             return false;
+    //         }
+
+    //         // OpenID Connect
+    //         if (scheme.type === 'openIdConnect') {
+    //             return !!process.env[`OPENID_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
+    //         }
+
+    //         return false;
+    //     });
     // });
 
     // // If we found matching security scheme(s), apply them
