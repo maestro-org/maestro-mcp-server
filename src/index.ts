@@ -23,6 +23,10 @@ import { z, ZodError } from 'zod';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
 
+/* MAESTRO OVERRIDE */
+import { mcpHandler } from './streamable-http.js';
+/* MAESTRO OVERRIDE */
+
 /**
  * Type definition for JSON objects
  */
@@ -3851,7 +3855,13 @@ server.setRequestHandler(
       console.error(`Error: Unknown tool requested: ${toolName}`);
       return { content: [{ type: 'text', text: `Error: Unknown tool requested: ${toolName}` }] };
     }
-    return await executeApiTool(toolName, toolDefinition, toolArgs ?? {}, securitySchemes);
+    return await executeApiTool(
+      toolName,
+      toolDefinition,
+      toolArgs ?? {},
+      securitySchemes,
+      mcpHandler.getBearerAuth()
+    );
   }
 );
 
