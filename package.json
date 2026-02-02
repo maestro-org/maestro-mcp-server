@@ -10,16 +10,13 @@
     "src"
   ],
   "scripts": {
-    "start": "node build/index.js",
-    "build": "tsc && chmod 755 build/index.js",
-    "typecheck": "tsc --noEmit",
-    "prestart": "npm run build",
-    "start:http": "node build/index.js --transport=streamable-http"
+    "start": "bun run build/index.js",
+    "build": "bun x tsc && chmod 755 build/index.js",
+    "typecheck": "bun x tsc --noEmit",
+    "test": "bun test",
+    "start:http": "bun run build/index.js --transport=streamable-http"
   },
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "dependencies": {
+    "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.0",
     "axios": "^1.9.0",
     "dotenv": "^16.4.5",
