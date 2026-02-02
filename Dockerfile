@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM oven/bun:1-alpine AS base
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
@@ -6,20 +6,19 @@ RUN apk add --no-cache dumb-init
 FROM base AS pkg
 WORKDIR /usr/src/app
 # Copy package files for better layer caching
-COPY package.json package-lock.json ./
+COPY package.json bun.lock ./
 
 FROM pkg AS build
 # Install all dependencies including devDependencies for building
-RUN npm ci --frozen-lockfile
+RUN bun install --frozen-lockfile
 # Copy source files only (thanks to .dockerignore)
 COPY . .
 # Build the application
-RUN npm run build
+RUN bun run build
 
 FROM pkg AS deps
 # Install only production dependencies
-RUN npm ci --frozen-lockfile --only=production && \
-    npm cache clean --force
+RUN bun install --frozen-lockfile --production
 
 FROM base AS maestro-mcp-server
 
@@ -44,4 +43,4 @@ ENV HOST=0.0.0.0 \
 
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "index.js", "--transport=streamable-http"]
+CMD ["bun", "run", "index.js", "--transport=streamable-http"]

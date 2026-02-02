@@ -22,6 +22,51 @@ import { setupStreamableHttpServer } from './streamable-http.js';
 import { z, ZodError } from 'zod';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
+import http from 'http';
+import https from 'https';
+
+/**
+ * Logging configuration - set LOG_LEVEL=debug for verbose logging
+ */
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+const isDebugMode = LOG_LEVEL === 'debug';
+
+function debugLog(...args: any[]) {
+  if (isDebugMode) {
+    console.error(...args);
+  }
+}
+
+/**
+ * HTTP Agent with connection pooling for better performance
+ */
+const httpAgent = new http.Agent({
+  keepAlive: true,
+  maxSockets: 50,
+  maxFreeSockets: 10,
+  timeout: 60000,
+});
+
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 50,
+  maxFreeSockets: 10,
+  timeout: 60000,
+});
+
+/**
+ * Axios instance with connection pooling
+ */
+const apiClient = axios.create({
+  httpAgent,
+  httpsAgent,
+  timeout: 30000,
+});
+
+/**
+ * Cache for compiled Zod schemas (computed once, reused for all requests)
+ */
+const zodSchemaCache: Map<string, z.ZodTypeAny> = new Map();
 
 /* MAESTRO OVERRIDE */
 import { mcpHandler } from './streamable-http.js';
@@ -51,7 +96,12 @@ interface McpToolDefinition {
  */
 export const SERVER_NAME = 'bitcoin---merged-services-api';
 export const SERVER_VERSION = '1.0.0';
-export const API_BASE_URL = 'https://xbt-mainnet.gomaestro-api.org/v0';
+export const API_BASE_URL = process.env.API_BASE_URL || 'https://xbt-mainnet.gomaestro-api.org/v0';
+
+/**
+ * Cached tools array for ListTools (built once at startup)
+ */
+let cachedToolsForClient: Tool[] | null = null;
 
 /**
  * MCP Server instance
@@ -3837,13 +3887,56 @@ const securitySchemes = {
   },
 };
 
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  const toolsForClient: Tool[] = Array.from(toolDefinitionMap.values()).map((def) => ({
+/**
+ * Initialize caches at startup for better performance
+ */
+function initializeCaches() {
+  const startTime = Date.now();
+
+  // Build cached tools array for ListTools
+  cachedToolsForClient = Array.from(toolDefinitionMap.values()).map((def) => ({
     name: def.name,
     description: def.description,
     inputSchema: def.inputSchema,
   }));
-  return { tools: toolsForClient };
+
+  // Pre-compile all Zod schemas
+  for (const [toolName, def] of toolDefinitionMap) {
+    try {
+      const zodSchema = compileZodSchema(def.inputSchema, toolName);
+      zodSchemaCache.set(toolName, zodSchema);
+    } catch (err) {
+      console.error(`Warning: Failed to pre-compile Zod schema for '${toolName}':`, err);
+      // Store a passthrough schema as fallback
+      zodSchemaCache.set(toolName, z.object({}).passthrough());
+    }
+  }
+
+  const elapsed = Date.now() - startTime;
+  console.error(`Initialized ${toolDefinitionMap.size} tools and Zod schemas in ${elapsed}ms`);
+}
+
+/**
+ * Compile a Zod schema from JSON Schema (used during initialization)
+ */
+function compileZodSchema(jsonSchema: any, toolName: string): z.ZodTypeAny {
+  if (typeof jsonSchema !== 'object' || jsonSchema === null) {
+    return z.object({}).passthrough();
+  }
+  const zodSchemaString = jsonSchemaToZod(jsonSchema);
+  const zodSchema = eval(zodSchemaString);
+  if (typeof zodSchema?.parse !== 'function') {
+    throw new Error('Eval did not produce a valid Zod schema.');
+  }
+  return zodSchema as z.ZodTypeAny;
+}
+
+// Initialize caches immediately
+initializeCaches();
+
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  // Return cached tools array (built once at startup)
+  return { tools: cachedToolsForClient! };
 });
 
 server.setRequestHandler(
@@ -4227,11 +4320,11 @@ async function executeApiTool(
       ...(requestBodyData !== undefined && { data: requestBodyData }),
     };
 
-    // Log request info to stderr (doesn't affect MCP output)
-    console.error(`Executing tool "${toolName}": ${config.method} ${config.url}`);
+    // Log request info (only in debug mode to reduce I/O overhead)
+    debugLog(`Executing tool "${toolName}": ${config.method} ${config.url}`);
 
-    // Execute the request
-    const response = await axios(config);
+    // Execute the request using pooled connection
+    const response = await apiClient(config);
 
     // Process and format the response
     let responseText = '';
@@ -4301,8 +4394,9 @@ async function executeApiTool(
  */
 async function main() {
   // Set up StreamableHTTP transport
+  const port = parseInt(process.env.PORT || '3000', 10);
   try {
-    await setupStreamableHttpServer(server, 3000);
+    await setupStreamableHttpServer(server, port);
   } catch (error) {
     console.error('Error setting up StreamableHTTP server:', error);
     process.exit(1);
@@ -4367,23 +4461,25 @@ function formatApiError(error: AxiosError): string {
 }
 
 /**
- * Converts a JSON Schema to a Zod schema for runtime validation
+ * Gets a cached Zod schema for a tool (pre-compiled at startup)
  *
- * @param jsonSchema JSON Schema
- * @param toolName Tool name for error reporting
- * @returns Zod schema
+ * @param jsonSchema JSON Schema (unused, kept for signature compatibility)
+ * @param toolName Tool name to look up in cache
+ * @returns Cached Zod schema
  */
 function getZodSchemaFromJsonSchema(jsonSchema: any, toolName: string): z.ZodTypeAny {
-  if (typeof jsonSchema !== 'object' || jsonSchema === null) {
-    return z.object({}).passthrough();
+  // Return cached schema (pre-compiled at startup)
+  const cached = zodSchemaCache.get(toolName);
+  if (cached) {
+    return cached;
   }
+
+  // Fallback: compile on-demand if somehow not in cache (shouldn't happen)
+  debugLog(`Warning: Zod schema for '${toolName}' not found in cache, compiling on-demand`);
   try {
-    const zodSchemaString = jsonSchemaToZod(jsonSchema);
-    const zodSchema = eval(zodSchemaString);
-    if (typeof zodSchema?.parse !== 'function') {
-      throw new Error('Eval did not produce a valid Zod schema.');
-    }
-    return zodSchema as z.ZodTypeAny;
+    const zodSchema = compileZodSchema(jsonSchema, toolName);
+    zodSchemaCache.set(toolName, zodSchema);
+    return zodSchema;
   } catch (err: any) {
     console.error(`Failed to generate/evaluate Zod schema for '${toolName}':`, err);
     return z.object({}).passthrough();

@@ -15,22 +15,22 @@ push: build
 	docker push $(REGISTRY)/$(ORG)/$(REPOSITORY):$(VERSION)
 
 install:
-	npm install
+	bun install
 
 dev:
-	npm run dev
+	bun run dev
 
 dist:
-	npm run build
+	bun run build
 
 start:
-	npm run start
+	bun run start
 
 test:
-	npm test
+	bun test
 
 lint:
-	npm run lint
+	bun run lint
 
 clean:
 	rm -rf dist

@@ -19,16 +19,16 @@ A Model Context Protocol (MCP) server for interacting with Bitcoin via the Maest
 
 ### Requirements
 
-- [Node.js](https://nodejs.org/en) v20 or higher
+- [Bun](https://bun.sh) v1.0 or higher
 
 ### Installation & Setup
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Build the project
-npm run build
+bun run build
 
 # Copy and edit environment variables
 cp .env.example .env
@@ -38,7 +38,7 @@ cp .env.example .env
 ### Running the Server
 
 ```bash
-npm run start:http
+bun run start:http
 ```
 
 - The server will start on the port specified in your `.env` (default: 3000).
@@ -89,8 +89,8 @@ Contributions and feature requests are welcome! Please:
 
 ### Local Development
 
-- Use `npm run dev` for hot-reloading (if configured)
-- Run tests with `npm test`
+- Use `bun run dev` for hot-reloading (if configured)
+- Run tests with `bun test`
 
 ---
 
