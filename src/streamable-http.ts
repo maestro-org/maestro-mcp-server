@@ -12,6 +12,20 @@ import { toReqRes, toFetchResponse } from 'fetch-to-node';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { AsyncLocalStorage } from 'async_hooks';
+
+/**
+ * AsyncLocalStorage for tracking session context across async operations
+ * This ensures tool calls get the correct session's bearer auth even in concurrent scenarios
+ */
+const sessionContext = new AsyncLocalStorage<string>();
+
+/**
+ * Get the current session ID from async context
+ */
+export function getCurrentSessionId(): string | undefined {
+  return sessionContext.getStore();
+}
 
 // Import server configuration constants
 import { SERVER_NAME, SERVER_VERSION } from './index.js';
@@ -78,8 +92,6 @@ class MCPStreamableHttpServer {
   server: Server;
   // Store active sessions with their data (per-session auth)
   sessions: Map<string, SessionData> = new Map();
-  // Track the current session ID for the active request
-  private currentSessionId: string | null = null;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor(server: Server) {
@@ -158,22 +170,20 @@ class MCPStreamableHttpServer {
         // Update last activity time
         sessionData.lastActivity = Date.now();
 
-        // Set current session for getBearerAuth
-        this.currentSessionId = sessionId;
+        // Use AsyncLocalStorage to maintain session context across async operations
+        // This ensures getBearerAuth returns the correct auth even in concurrent scenarios
+        return sessionContext.run(sessionId, async () => {
+          // Handle the request with the transport
+          await transport.handleRequest(req, res, body);
 
-        // Handle the request with the transport
-        await transport.handleRequest(req, res, body);
+          // Cleanup when the response ends
+          res.on('close', () => {
+            debugLog(`Request closed for session ${sessionId}`);
+          });
 
-        // Clear current session
-        this.currentSessionId = null;
-
-        // Cleanup when the response ends
-        res.on('close', () => {
-          debugLog(`Request closed for session ${sessionId}`);
+          // Convert Node.js response back to Fetch Response
+          return toFetchResponse(res);
         });
-
-        // Convert Node.js response back to Fetch Response
-        return toFetchResponse(res);
       }
 
       // Create new transport for initialize requests
@@ -270,11 +280,13 @@ class MCPStreamableHttpServer {
 
   /**
    * Get Bearer Authorization token for the current session
-   * Returns the per-session auth token, not a global shared value
+   * Uses AsyncLocalStorage to get the correct session context in concurrent scenarios
    */
   public getBearerAuth(): string {
-    if (this.currentSessionId) {
-      const sessionData = this.sessions.get(this.currentSessionId);
+    // Get session ID from AsyncLocalStorage context (works across async boundaries)
+    const currentSession = sessionContext.getStore();
+    if (currentSession) {
+      const sessionData = this.sessions.get(currentSession);
       return sessionData?.bearerAuth || '';
     }
     return '';
